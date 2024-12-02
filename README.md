@@ -21,7 +21,7 @@ Demo questionnaire source: [TCU Test from Institute of Behavioral Research, Texa
 ## Setup
 
 - Install dependencies: `pip install -r requirements.txt`
-- Run app.py and open url http://127.0.0.1:5000
+- Run `app.py` and open url http://127.0.0.1:5000
 - File Structure
 
 ```bash
@@ -34,5 +34,5 @@ Demo questionnaire source: [TCU Test from Institute of Behavioral Research, Texa
 │   ├── PreprocessingModule/
 │   ├── SampleGenerationModule/
 │   └── ExecutionModule/
-└── main.py
+└── app.py
 ```
