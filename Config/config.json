@@ -1,0 +1,56 @@
+{
+    "llm_settings": {
+        "provider": "openai",
+        "api_key": "",
+        "model": "gpt-4o-mini",
+        "max_tokens": 512,
+        "temperature": 0
+    },
+    "output": {
+        "name": "survey",
+        "base_dir": "Data/Output",
+        "merged_json": {
+            "enabled": true,
+            "format": "json"
+        },
+        "visualization": {
+            "enabled": true,
+            "format": "png",
+            "dpi": 300
+        },
+        "mode": "not_debug"
+    },
+    "user_preference": {
+        "survey_path": "./Data/UserUpload/TCU_SAMPLE.pdf",
+        "preprocessing": {
+            "max_questions_per_segment": 20,
+            "polish": {
+                "enable": false,
+                "prompt": "Refine the text to adhere to an academic style while enhancing its spelling, grammar, and clarity. Ensure the format remains unchanged."
+            },
+            "model_calibration": {
+                "enable": true,
+                "question": -1,
+                "prompt": ""
+            }
+        },
+        "sample": {
+            "upload": true,
+            "sample_size": 50,
+            "kl_threshold": 0.02
+        },
+        "execution": {
+            "order": "Please answer the survey questions sequentially based on your profile.",
+            "segmentation": false
+        }
+    },
+    "debug_switch": {
+        "preprocess": true,
+        "samplespace": true,
+        "execution": true
+    },
+    "logging": {
+        "level": "INFO",
+        "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    }
+}

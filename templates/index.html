@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Survey Upload System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    {% extends "base.html" %}
+
+    {% block content %}
+    <div class="container">
+        <div class="sidebar">
+            <h2>Upload History</h2>
+            <div class="history-list">
+                {% for item in history %}
+                <div class="history-item {% if item.status == 'DAG_ERROR' %}dag-error{% endif %}" 
+                     data-filename="{{ item.filename }}"
+                     data-status="{{ item.status }}">
+                    <div class="filename">{{ item.filename }}</div>
+                    <div class="upload-time">{{ item.upload_time }}</div>
+                    <div class="file-info">
+                        <span class="file-size">{{ (item.size / 1024)|round(1) }} KB</span>
+                        <span class="status-badge {% if item.status %}{{ item.status|lower }}{% else %}unprocessed{% endif %}">
+                            {% if item.status %}
+                                {{ item.status|title }}
+                            {% else %}
+                                Unprocessed
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Upload View -->
+            <div id="uploadView" class="view active">
+                <div class="upload-area" id="dropZone">
+                    <div class="upload-message">
+                        <img src="{{ url_for('static', filename='images/upload-icon.svg') }}" alt="Upload" class="upload-icon">
+                        <p>Drop files here or click to upload</p>
+                        <p class="supported-formats">Supported formats: DOCX, PDF, TXT, MD, Markdown</p>
+                    </div>
+                    <input type="file" id="fileInput" accept=".docx,.pdf,.txt,.md,.markdown" hidden>
+                </div>
+                
+                <div id="selectedFileInfo" class="selected-file-info" style="display: none;">
+                    <div class="selected-file-content">
+                        <div class="selected-filename"></div>
+                        <button class="process-button" id="processButton">Process File</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Processing View -->
+            <div id="processingView" class="view">
+                <div class="question-count">
+                    Total Questions: <span id="totalQuestions">0</span>
+                </div>
+                
+                <div class="workspace">
+                    <div class="questions-panel">
+                        <h3>Survey Questions</h3>
+                        <div class="questions-list" id="questionsList"></div>
+                    </div>
+
+                    <div class="flow-diagram">
+                        <h3>Survey Flow</h3>
+                        <div class="diagram-container" id="flowDiagram"></div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn primary" onclick="handleNextStep()">Next Step</button>
+                </div>
+            </div>
+
+            <!-- Calibration View -->
+            <div id="calibrationView" class="view">
+                <div class="card">
+                    <h2>Attention Check Question</h2>
+                    <p>Would you like to add an attention check question at the end of the survey?</p>
+                    <div class="option-buttons">
+                        <button class="btn primary" onclick="handleCalibration(true)">Yes</button>
+                        <button class="btn secondary" onclick="handleCalibration(false)">No</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+
+    {% block scripts %}
+    <script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+    {% endblock %}
+</body>
+</html>

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Smart Survey{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+    <h1>Settings</h1>
+    <form id="settingsForm" class="settings-form">
+        <div class="settings-section">
+            <h2>LLM Settings</h2>
+            <div class="setting-group">
+                <label for="provider">Provider</label>
+                <select id="provider" name="provider">
+                    <option value="openai">OpenAI</option>
+                    <option value="anthropic">Anthropic</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label for="api_key">API Key</label>
+                <input type="password" id="api_key" name="api_key">
+            </div>
+            <div class="setting-group">
+                <label for="model">Model</label>
+                <input type="text" id="model" name="model">
+            </div>
+            <div class="setting-group">
+                <label for="max_tokens">Max Tokens</label>
+                <input type="number" id="max_tokens" name="max_tokens">
+            </div>
+            <div class="setting-group">
+                <label for="temperature">Temperature</label>
+                <input type="range" id="temperature" name="temperature" min="0" max="2" step="0.1">
+                <span id="temperatureValue">1.0</span>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h2>User Preferences</h2>
+            <div class="setting-group">
+                <label for="sample_size">Sample Size</label>
+                <input type="number" id="sample_size" name="sample_size">
+            </div>
+            <div class="setting-group">
+                <label for="execution_order">Execution Instruction (zero-shot, few-shot, etc.)</label>
+                <input type="text" id="execution_order" name="execution_order">
+                <div class="setting-hint">Instruction for how the agent should answer the survey. Zero-shot example: "The response should consist of two elements. The first element explains the reasoning behind your answer, and the second element contains the answer. Answer in a list."</div>
+            </div>
+            <div class="setting-group">
+                <label for="segmentation">Enable Segmentation</label>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="segmentation" name="segmentation">
+                    <span class="toggle-slider"></span>
+                </div>
+                <div class="setting-hint">When enabled, agent will answer the survey in segments for better accuracy</div>
+            </div>
+        </div>
+
+        <div class="settings-actions">
+            <button type="submit" class="btn primary">Save Changes</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+{% endblock %}

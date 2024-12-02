@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sample Space Generation</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    {% extends "base.html" %}
+
+    {% block content %}
+    <div class="container">
+        <div class="sidebar">
+            <h2>Upload History</h2>
+            <div class="history-list">
+                {% for item in history %}
+                <div class="history-item {% if item.status == 'DAG_ERROR' %}dag-error{% endif %}" 
+                     data-filename="{{ item.filename }}"
+                     data-status="{{ item.status }}">
+                    <div class="filename">{{ item.filename }}</div>
+                    <div class="upload-time">{{ item.upload_time }}</div>
+                    <div class="file-info">
+                        <span class="file-size">{{ (item.size / 1024)|round(1) }} KB</span>
+                        <span class="status-badge {% if item.status %}{{ item.status|lower }}{% else %}unprocessed{% endif %}">
+                            {% if item.status %}
+                                {{ item.status|title }}
+                            {% else %}
+                                Unprocessed
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Main workspace -->
+        <div class="main-content">
+            <!-- Method Selection View -->
+            <div id="methodSelectionView" class="view active">
+                <div class="method-selection-container">
+                    <h2>Choose Sample Generation Method</h2>
+                    <div class="method-options">
+                        <div class="method-card" onclick="selectMethod('upload')">
+                            <h3>Upload Samples</h3>
+                            <p>Upload a text file with sample profiles</p>
+                            <div class="method-icon">📄</div>
+                        </div>
+                        <div class="method-card" onclick="selectMethod('generate')">
+                            <h3>Generate Samples</h3>
+                            <p>Create and customize sample dimensions</p>
+                            <div class="method-icon">⚙️</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload View -->
+            <div id="uploadView" class="view">
+                <div class="sample-upload-area" id="sampleDropZone">
+                    <div class="upload-message">
+                        <img src="{{ url_for('static', filename='images/upload-icon.svg') }}" alt="Upload" class="upload-icon">
+                        <p>Drop your sample profiles file or click to upload</p>
+                        <p class="supported-formats">Text file with one profile per line</p>
+                    </div>
+                    <input type="file" id="sampleFileInput" accept=".txt" hidden>
+                </div>
+            </div>
+
+            <div id="dimensionsView" class="view">
+                <div class="dimensions-container">
+                    <div class="dimensions-header">
+                        <h2>Sample Dimensions</h2>
+                        <div class="dimension-actions">
+                            <button class="btn secondary" onclick="addNewDimension()">Add Dimension</button>
+                            <button class="btn primary" onclick="saveDimensions()">Save Dimensions</button>
+                            <button class="btn primary" onclick="generateSamples()">Generate Samples</button>
+                        </div>
+                    </div>
+                    <div class="dimensions-grid" id="dimensionsGrid"></div>
+                </div>
+            </div>
+
+            <div id="profileView" class="view">
+                <div class="profile-container">
+                    <div class="profile-header">
+                        <h2>Sample Profiles</h2>
+                        <div class="total-samples">
+                            Total Samples: <span id="totalSamples">0</span>
+                        </div>
+                    </div>
+                    <div class="profile-display">
+                        <button class="nav-btn prev" onclick="showPreviousProfile()">←</button>
+                        <div class="profile-content">
+                            <div id="profileRadar"></div>
+                            <div id="profileDetails"></div>
+                        </div>
+                        <button class="nav-btn next" onclick="showNextProfile()">→</button>
+                    </div>
+                    <div class="profile-navigation">
+                        Profile <span id="currentProfileIndex">1</span> of <span id="totalProfiles">10</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="resultsView" class="view">
+            <div class="results-container">
+                <div class="sample-count-banner">
+                    <div class="count-label">Total Samples</div>
+                    <div id="sampleCount" class="count-number">0</div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn primary" onclick="proceedToExecution()">
+                        Proceed to Execution
+                    </button>
+                </div>
+        
+                <div class="profiles-grid" id="profilesGrid">
+                    <!-- Profiles will be inserted here -->
+                </div>
+            </div>
+        </div>        
+    </div>
+    {% endblock %}
+
+    {% block scripts %}
+    <script src="{{ url_for('static', filename='js/samplespace.js') }}"></script>
+    {% endblock %}
+</body>
+</html>
