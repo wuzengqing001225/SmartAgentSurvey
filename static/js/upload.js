@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.handleCalibration = function(enable) {
         localStorage.setItem('currentFile', currentSelectedFile);
-        updateFileStatus(currentSelectedFile, 'calibration');
+        updateFileStatus(currentSelectedFile, 'Attention Check');
         
         fetch('/calibration', {
             method: 'POST',

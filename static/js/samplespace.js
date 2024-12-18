@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Update status badge if needed
                 const statusBadge = item.querySelector('.status-badge');
                 if (statusBadge && !statusBadge.classList.contains('calibration')) {
-                    statusBadge.textContent = 'Calibration';
+                    statusBadge.textContent = 'Attention Check';
                     statusBadge.className = 'status-badge calibration';
                 }
             } else {

@@ -1,4 +1,29 @@
+// Modal functionality
+function openSettingsModal() {
+    document.getElementById('settingsModal').classList.add('show');
+}
+
+function closeSettingsModal() {
+    document.getElementById('settingsModal').classList.remove('show');
+}
+
+function showMessage(message, alertClass) {
+    const alert = document.createElement('div');
+    alert.className = alertClass;
+    alert.textContent = message;
+    document.body.appendChild(alert);
+    setTimeout(() => alert.remove(), 3000);
+}
+
+// Initialize settings functionality
 document.addEventListener('DOMContentLoaded', function() {
+    // Close modal when clicking outside
+    document.getElementById('settingsModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeSettingsModal();
+        }
+    });
+
     // Load current settings
     fetch('/api/settings')
         .then(response => response.json())
@@ -9,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('max_tokens').value = data.llm_settings.max_tokens;
             document.getElementById('temperature').value = data.llm_settings.temperature;
             document.getElementById('temperatureValue').textContent = data.llm_settings.temperature;
-            
+
             document.getElementById('sample_size').value = data.user_preference.sample.sample_size;
             document.getElementById('execution_order').value = data.user_preference.execution.order;
             document.getElementById('segmentation').checked = data.user_preference.execution.segmentation;
@@ -23,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Form submission
     document.getElementById('settingsForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        
+
         const formData = {
             llm_settings: {
                 provider: document.getElementById('provider').value,
@@ -53,30 +78,14 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // window.location.href = '/';
-                showSuccess('Config saved successfully');
+                showMessage('Config saved successfully', 'success-alert');
+                closeSettingsModal();
             } else {
-                showError(data.error || 'Failed to save settings');
+                showMessage(data.error || 'Failed to save settings', 'error-alert');
             }
         })
         .catch(error => {
-            showError('Error saving settings');
+            showMessage('Error saving settings', 'error-alert');
         });
     });
-
-    function showError(message) {
-        const alert = document.createElement('div');
-        alert.className = 'error-alert';
-        alert.textContent = message;
-        document.body.appendChild(alert);
-        setTimeout(() => alert.remove(), 3000);
-    }
-
-    function showSuccess(message) {
-        const alert = document.createElement('div');
-        alert.className = 'success-alert';
-        alert.textContent = message;
-        document.body.appendChild(alert);
-        setTimeout(() => alert.remove(), 3000);
-    }
 });

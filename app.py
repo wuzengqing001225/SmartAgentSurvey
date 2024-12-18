@@ -274,7 +274,7 @@ def handle_calibration():
 
         # Update status to show calibration state
         status_dict = load_process_status()
-        status_dict[filename] = 'calibration'
+        status_dict[filename] = 'attention check'
         save_process_status(status_dict)
 
         return jsonify({
@@ -723,10 +723,6 @@ def download_results(format):
 def cleanup_config():
     config_manager.clear()
     return jsonify({'success': True})
-
-@app.route('/settings')
-def settings():
-    return render_template('settings.html')
 
 @app.route('/api/settings', methods=['GET', 'POST'])
 def handle_settings():
