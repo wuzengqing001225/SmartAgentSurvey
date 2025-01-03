@@ -1,15 +1,78 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     let currentFile = localStorage.getItem('currentFile');
     let currentDimensions = null;
     let currentProfiles = [];
     let currentProfileIndex = 0;
-    
+
+    let sampleSizeInput = document.getElementById('sampleSizeInput');
+    let settingsModalInput = document.getElementById('sample_size');
+
+    fetch('/api/settings')
+        .then(response => response.json())
+        .then(data => {
+            const sampleSize = data.user_preference.sample.sample_size;
+            sampleSizeInput.value = sampleSize;
+            if (settingsModalInput) {
+                settingsModalInput.value = sampleSize;
+            }
+        })
+        .catch(error => console.error('Error loading sample size:', error));
+
+    sampleSizeInput.addEventListener('change', function () {
+        const newSize = parseInt(this.value);
+        if (isNaN(newSize) || newSize < 1 || newSize > 1000) {
+            showError('Sample size must be between 1 and 1000');
+            return;
+        }
+
+        fetch('/api/settings')
+            .then(response => response.json())
+            .then(data => {
+                const updatedConfig = {
+                    llm_settings: data.llm_settings,
+                    user_preference: {
+                        ...data.user_preference,
+                        sample: {
+                            ...data.user_preference.sample,
+                            sample_size: newSize
+                        }
+                    }
+                };
+
+                return fetch('/api/settings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(updatedConfig)
+                });
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccess('Sample size updated successfully');
+                    if (settingsModalInput) {
+                        settingsModalInput.value = newSize;
+                    }
+                } else {
+                    showError(data.error || 'Failed to update sample size');
+                }
+            })
+            .catch(error => showError('Error updating sample size'));
+    });
+
+    sampleSizeInput.addEventListener('input', function () {
+        if (settingsModalInput) {
+            settingsModalInput.value = sampleSizeInput.value;
+        }
+    });
+
     // Keep processing status
     if (currentFile) {
         document.querySelectorAll('.history-item').forEach(item => {
             // Remove any existing active classes first
             item.classList.remove('active', 'active-processing');
-            
+
             if (item.dataset.filename === currentFile) {
                 item.classList.add('active-processing');
                 // Update status badge if needed
@@ -26,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Method Selection
-    window.selectMethod = function(method) {
+    window.selectMethod = function (method) {
         if (method === 'upload') {
             document.getElementById('methodSelectionView').classList.remove('active');
             document.getElementById('uploadView').classList.add('active');
@@ -35,20 +98,20 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch('/sample/generate_dimensions', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ filename: currentFile })
+                body: JSON.stringify({filename: currentFile})
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    currentDimensions = data.dimensions;
-                    renderDimensionsGrid(data.dimensions);
-                    document.getElementById('methodSelectionView').classList.remove('active');
-                    document.getElementById('dimensionsView').classList.add('active');
-                } else {
-                    showError(data.error || 'Failed to generate dimensions');
-                }
-            })
-            .catch(error => showError('Error generating dimensions'));
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        currentDimensions = data.dimensions;
+                        renderDimensionsGrid(data.dimensions);
+                        document.getElementById('methodSelectionView').classList.remove('active');
+                        document.getElementById('dimensionsView').classList.add('active');
+                    } else {
+                        showError(data.error || 'Failed to generate dimensions');
+                    }
+                })
+                .catch(error => showError('Error generating dimensions'));
         }
     };
 
@@ -107,11 +170,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    window.addNewDimension = function() {
+    window.addNewDimension = function () {
         let dimensionNumber = 1;
         const baseName = 'New Dimension';
         let dimensionName = baseName;
-        
+
         while (dimensionName in currentDimensions) {
             dimensionNumber++;
             dimensionName = `${baseName} ${dimensionNumber}`;
@@ -126,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
         renderDimensionsGrid(currentDimensions);
     };
 
-    window.addOption = function(button) {
+    window.addOption = function (button) {
         const optionsContainer = button.closest('.options-container');
         const newRow = document.createElement('div');
         newRow.className = 'option-row';
@@ -141,7 +204,7 @@ document.addEventListener('DOMContentLoaded', function() {
         optionsContainer.insertBefore(newRow, button);
     };
 
-    window.removeOption = function(button) {
+    window.removeOption = function (button) {
         const row = button.closest('.option-row');
         const container = row.closest('.options-container');
         if (container.querySelectorAll('.option-row').length > 1) {
@@ -149,7 +212,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    window.removeDimension = function(name) {
+    window.removeDimension = function (name) {
         delete currentDimensions[name];
         renderDimensionsGrid(currentDimensions);
     };
@@ -159,7 +222,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const dimensions = {};
         document.querySelectorAll('.dimension-card').forEach(card => {
             const name = card.querySelector('.dimension-name input').value;
-            
+
             if (card.querySelector('.scale-inputs')) {
                 const inputs = card.querySelectorAll('.scale-inputs input');
                 dimensions[name] = {
@@ -187,42 +250,47 @@ document.addEventListener('DOMContentLoaded', function() {
         return dimensions;
     }
 
-    window.saveDimensions = function() {
+    window.saveDimensions = function () {
         const updatedDimensions = collectDimensionData();
         currentDimensions = updatedDimensions;
 
         fetch('/sample/save_dimensions', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ dimensions: updatedDimensions })
+            body: JSON.stringify({dimensions: updatedDimensions})
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showSuccess('Dimensions saved successfully');
-            } else {
-                showError(data.error || 'Failed to save dimensions');
-            }
-        })
-        .catch(error => showError('Error saving dimensions'));
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccess('Dimensions saved successfully');
+                } else {
+                    showError(data.error || 'Failed to save dimensions');
+                }
+            })
+            .catch(error => showError('Error saving dimensions'));
     };
 
-    window.generateSamples = function() {
+    window.generateSamples = function () {
         const updatedDimensions = collectDimensionData();
+        const sampleSize = parseInt(sampleSizeInput.value) || 10;
+
         fetch('/sample/update_dimensions', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ dimensions: updatedDimensions })
+            body: JSON.stringify({
+                dimensions: updatedDimensions,
+                sample_size: sampleSize
+            })
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showResults(data);
-            } else {
-                showError(data.error || 'Failed to generate samples');
-            }
-        })
-        .catch(error => showError('Error generating samples'));
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showResults(data);
+                } else {
+                    showError(data.error || 'Failed to generate samples');
+                }
+            })
+            .catch(error => showError('Error generating samples'));
     };
 
     // File Upload Handling
@@ -263,15 +331,15 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showResults(data, true);
-            } else {
-                showError(data.error || 'Upload failed');
-            }
-        })
-        .catch(error => showError('Error uploading file'));
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showResults(data, true);
+                } else {
+                    showError(data.error || 'Upload failed');
+                }
+            })
+            .catch(error => showError('Error uploading file'));
     }
 
     // Results Display
@@ -296,7 +364,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.history-item').forEach(item => {
             // Remove any existing active classes first
             item.classList.remove('active', 'active-processing');
-            
+
             if (item.dataset.filename === currentFile) {
                 item.classList.add('active-processing');
                 // Update status badge if needed
@@ -325,7 +393,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <div class="container-upload" id="profilesContainerUpload"></div>
             `;
-    
+
             const profilesContainer = document.getElementById('profilesContainerUpload');
 
             // Uploaded samples: display as text
@@ -334,8 +402,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <span><strong>Profile ${index + 1}:</strong> ${sample}</span>
                 </div>
             `).join('');
-        }    
-        else {
+        } else {
             const resultsContainer = document.getElementById('resultsView');
             resultsView.style.display = 'block';
 
@@ -351,7 +418,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <div class="profiles-container" id="profilesContainer"></div>
             `;
-    
+
             const profilesContainer = document.getElementById('profilesContainer');
 
             // Generated samples: display as cards
@@ -360,8 +427,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="profile-header">Profile ${index + 1}</div>
                     <div class="profile-attributes">
                         ${Object.entries(sample).map(([key, value]) => {
-                            const dimensionConfig = data.dimensions[key];
-                            return `
+                const dimensionConfig = data.dimensions[key];
+                return `
                                 <div class="attribute-row">
                                     <div class="attribute-name">${key}</div>
                                     <div class="attribute-value">
@@ -369,12 +436,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                     </div>
                                 </div>
                             `;
-                        }).join('')}
+            }).join('')}
                     </div>
                 </div>
             `).join('');
         }
-    }    
+    }
 
     function renderAttributeValue(value, dimensionConfig) {
         if (!dimensionConfig) return value;
@@ -412,19 +479,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             `;
         }
-        
+
         return value;
     }
-  
+
     // Profile Navigation
-    window.showNextProfile = function() {
+    window.showNextProfile = function () {
         if (currentProfileIndex < Math.min(9, currentProfiles.length - 1)) {
             currentProfileIndex++;
             showProfile(currentProfileIndex);
         }
     };
-    
-    window.showPreviousProfile = function() {
+
+    window.showPreviousProfile = function () {
         if (currentProfileIndex > 0) {
             currentProfileIndex--;
             showProfile(currentProfileIndex);
@@ -446,11 +513,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
         `).join('');
-    }   
-    
+    }
+
 
     // Navigation
-    window.proceedToExecution = function() {
+    window.proceedToExecution = function () {
         window.location.href = '/execute';
     };
 

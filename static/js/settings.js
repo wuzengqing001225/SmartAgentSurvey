@@ -1,4 +1,3 @@
-// Modal functionality
 function openSettingsModal() {
     document.getElementById('settingsModal').classList.add('show');
 }
@@ -15,16 +14,16 @@ function showMessage(message, alertClass) {
     setTimeout(() => alert.remove(), 3000);
 }
 
-// Initialize settings functionality
 document.addEventListener('DOMContentLoaded', function() {
-    // Close modal when clicking outside
+    let settingsModalInput = document.getElementById('sample_size');
+    let sampleSizeInput = document.getElementById('sampleSizeInput');
+
     document.getElementById('settingsModal').addEventListener('click', function(e) {
         if (e.target === this) {
             closeSettingsModal();
         }
     });
 
-    // Load current settings
     fetch('/api/settings')
         .then(response => response.json())
         .then(data => {
@@ -35,19 +34,27 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('temperature').value = data.llm_settings.temperature;
             document.getElementById('temperatureValue').textContent = data.llm_settings.temperature;
 
-            document.getElementById('sample_size').value = data.user_preference.sample.sample_size;
             document.getElementById('execution_order').value = data.user_preference.execution.order;
             document.getElementById('segmentation').checked = data.user_preference.execution.segmentation;
+            let sampleSize = data.user_preference.sample.sample_size;
+            settingsModalInput.value = sampleSize;
+            if (sampleSizeInput) {
+                sampleSizeInput.value = sampleSize;
+            }
         });
 
-    // Temperature slider value display
     document.getElementById('temperature').addEventListener('input', function(e) {
         document.getElementById('temperatureValue').textContent = e.target.value;
     });
 
-    // Form submission
     document.getElementById('settingsForm').addEventListener('submit', function(e) {
         e.preventDefault();
+
+        let sampleSize = parseInt(settingsModalInput.value);
+        if (isNaN(sampleSize) || sampleSize < 1 || sampleSize > 1000) {
+            showMessage('Sample size must be between 1 and 1000', 'error-alert');
+            return;
+        }
 
         const formData = {
             llm_settings: {
@@ -59,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             user_preference: {
                 sample: {
-                    sample_size: parseInt(document.getElementById('sample_size').value)
+                    sample_size: sampleSize
                 },
                 execution: {
                     order: document.getElementById('execution_order').value,
@@ -79,6 +86,9 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 showMessage('Config saved successfully', 'success-alert');
+                if (sampleSizeInput) {
+                    sampleSizeInput.value = sampleSize;
+                }
                 closeSettingsModal();
             } else {
                 showMessage(data.error || 'Failed to save settings', 'error-alert');
@@ -87,5 +97,11 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => {
             showMessage('Error saving settings', 'error-alert');
         });
+    });
+
+    settingsModalInput.addEventListener('input', function () {
+        if (sampleSizeInput) {
+            sampleSizeInput.value = settingsModalInput.value;
+        }
     });
 });

@@ -1507,6 +1507,49 @@ input:checked + .toggle-slider:before {
     display: block;
 }
 
+.sample-size-control {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-right: 1rem;
+}
+
+/* Label styling */
+.sample-size-control label {
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+/* Input styling */
+.sample-size-input {
+    width: 120px;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--background-light);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.sample-size-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.sample-size-input:hover {
+    border-color: var(--primary-color);
+}
+
+/* Number input arrows styling */
+.sample-size-input::-webkit-inner-spin-button,
+.sample-size-input::-webkit-outer-spin-button {
+    opacity: 1;
+    height: 1.5rem;
+    margin-right: 0.5rem;
+}
+
+
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
