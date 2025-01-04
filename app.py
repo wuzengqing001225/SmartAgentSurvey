@@ -34,6 +34,9 @@ class ConfigManager:
     def get_output_dir(self):
         return self.get_config_set()[3].output_dir
 
+    def update_sample_size(self, new_sample_size):
+        self._current_config_set[0]['user_preference']['sample']['sample_size'] = new_sample_size
+
     def clear(self):
         self._current_config = None
         self._current_config_set = None
@@ -273,6 +276,32 @@ def handle_few_shot():
             'error': str(e)
         }), 500
 
+@app.route('/save-profiles', methods=['POST'])
+def handle_profiles():
+    """Update the profiles in sample_space.csv file."""
+    edited_profiles = request.get_json()
+
+    if not isinstance(edited_profiles, list) or not all(isinstance(profile, dict) for profile in edited_profiles):
+            return jsonify({'error': 'Invalid data format'}), 400
+
+    try:
+        df = pd.DataFrame(edited_profiles)
+        config_set = config_manager.get_config_set()
+        _, _, logger, output_manager = config_set
+        output_dir = config_set[3].output_dir
+        output_manager.save_csv(df, "sample_space.csv")
+
+        return jsonify({
+            'success': True
+        })
+
+    except Exception as e:
+        print(f"Few-shot processing error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 
 @app.route('/calibration', methods=['POST'])
 def handle_calibration():
@@ -410,11 +439,11 @@ def upload_samples():
 def update_dimensions():
     try:
         dimensions = request.json.get('dimensions')
+        sample_size = request.json.get('sample_size')
         if not dimensions:
             return jsonify({'error': 'No dimensions provided'}), 400
 
-        # reset cached config because of changes to sample size (or other values in the future).
-        config_manager.clear()
+        config_manager.update_sample_size(sample_size)
         config_set = config_manager.get_config_set()
         output_dir = config_set[3].output_dir
         

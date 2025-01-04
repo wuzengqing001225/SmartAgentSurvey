@@ -1549,6 +1549,83 @@ input:checked + .toggle-slider:before {
     margin-right: 0.5rem;
 }
 
+/* For editable profiles */
+.editable-input,
+.editable-select {
+    color: var(--primary-color);
+    font-size: inherit;
+    padding: 0.4rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    width: 100%; /* Ensure inputs and selects take up the full width */
+    box-sizing: border-box;
+    height: 2.5rem; /* Set a consistent height for all inputs and selects */
+    min-width: 8rem; /* Set a minimum width to fit content comfortably */
+    max-width: 15rem; /* Optional: Cap the width to prevent excessively large fields */
+}
+
+.editable-input:focus,
+.editable-select:focus {
+    outline: 2px solid var(--primary-color);
+}
+
+.editable-select {
+    appearance: none;
+    -moz-appearance: none; /* For Firefox */
+    -webkit-appearance: none; /* For Safari */
+}
+
+.option-marker {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--border-color);
+    margin: 0 2px;
+}
+
+.option-marker.active {
+    background: var(--primary-color);
+}
+
+.profile-card {
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem;
+}
+
+.profile-header {
+    font-weight: bold;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.profile-attributes {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.attribute-row {
+    display: flex;
+    justify-content: space-between; /* Align the label and field on a single row */
+    align-items: center; /* Ensure vertical alignment */
+    gap: 1rem;
+}
+
+.attribute-name {
+    font-size: 0.9rem;
+    flex: 1; /* Allow labels to take equal space */
+    min-width: 8rem; /* Ensure labels have enough space */
+}
+
+.attribute-value {
+    flex: 2; /* Inputs and selects get more space */
+}
+
+
 
 @keyframes spin {
     0% { transform: rotate(0deg); }

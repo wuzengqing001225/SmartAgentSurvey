@@ -414,7 +414,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                 </div>
                 <div class="execution-button">
-                    <button class="btn primary" onclick="proceedToExecution()">Proceed to Execution</button>
+                    <button class="btn primary" onclick="proceedToExecutionAndSendProfiles()">Proceed to Execution</button>
                 </div>
                 <div class="profiles-container" id="profilesContainer"></div>
             `;
@@ -423,64 +423,81 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Generated samples: display as cards
             profilesContainer.innerHTML = data.samples.slice(0, 10).map((sample, index) => `
-                <div class="profile-card">
-                    <div class="profile-header">Profile ${index + 1}</div>
-                    <div class="profile-attributes">
-                        ${Object.entries(sample).map(([key, value]) => {
+            <div class="profile-card" data-index="${index}">
+                <div class="profile-header">Profile ${index + 1}</div>
+                <div class="profile-attributes">
+                    ${Object.entries(sample).map(([key, value]) => {
                 const dimensionConfig = data.dimensions[key];
                 return `
-                                <div class="attribute-row">
-                                    <div class="attribute-name">${key}</div>
-                                    <div class="attribute-value">
-                                        ${renderAttributeValue(value, dimensionConfig)}
-                                    </div>
-                                </div>
-                            `;
-            }).join('')}
+                    <div class="attribute-row">
+                        <div class="attribute-name">${key}</div>
+                        <div class="attribute-value">
+                            ${renderEditableAttribute(value, dimensionConfig, key, index)}
+                        </div>
                     </div>
+                    `;
+            }).join('')}
                 </div>
+            </div>
             `).join('');
         }
     }
 
-    function renderAttributeValue(value, dimensionConfig) {
-        if (!dimensionConfig) return value;
-
-        if (dimensionConfig.scale) {
-            // Numeric value with scale visualization
-            const [min, max] = dimensionConfig.scale;
-            const percentage = ((value - min) / (max - min)) * 100;
-            return `
-                <div class="value-container">
-                    <span class="value-text">${value}</span>
-                    <div class="value-scale">
-                        <div class="scale-track">
-                            <div class="scale-marker" style="left: ${percentage}%"></div>
-                        </div>
-                        <div class="scale-labels">
-                            <span>${min}</span>
-                            <span>${max}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-        } else if (dimensionConfig.options) {
-            // Options with position indicator
-            const currentIndex = dimensionConfig.options.indexOf(value);
-            return `
-                <div class="value-container">
-                    <span class="value-text">${value}</span>
-                    <div class="options-indicator">
-                        ${dimensionConfig.options.map((opt, idx) => `
-                            <span class="option-marker ${idx === currentIndex ? 'active' : ''}" 
-                                title="${opt}"></span>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
+    function renderEditableAttribute(value, dimensionConfig, key, index) {
+        if (!dimensionConfig) {
+            // Non-configurable attributes as plain text input
+            return `<input type="text" class="editable-input" data-key="${key}" data-index="${index}" value="${value}" />`;
         }
 
-        return value;
+        if (dimensionConfig.scale) {
+            // Numeric value with constrained input
+            const [min, max] = dimensionConfig.scale;
+            return `
+            <input type="number" class="editable-input" 
+                data-key="${key}" data-index="${index}" 
+                value="${value}" min="${min}" max="${max}" />
+        `;
+        } else if (dimensionConfig.options) {
+            // Dropdown for predefined options
+            return `
+            <select class="editable-select" data-key="${key}" data-index="${index}">
+                ${dimensionConfig.options.map(opt => `
+                    <option value="${opt}" ${opt === value ? 'selected' : ''}>${opt}</option>
+                `).join('')}
+            </select>
+        `;
+        }
+
+        return `<input type="text" class="editable-input" data-key="${key}" data-index="${index}" value="${value}" />`;
+    }
+
+    function collectAndSendEditedProfiles() {
+        const editedProfiles = [];
+        document.querySelectorAll('.profile-card').forEach(card => {
+            const profile = {};
+            card.querySelectorAll('.editable-input, .editable-select').forEach(input => {
+                const key = input.getAttribute('data-key');
+                const value = input.value;
+                profile[key] = value;
+            });
+            editedProfiles.push(profile);
+        });
+
+        // Send the edited profiles to the Flask endpoint
+        fetch('/save-profiles', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(editedProfiles)
+        }).then(response => {
+            if (response.ok) {
+                alert('Edits saved successfully!');
+            } else {
+                alert('Failed to save edits.');
+            }
+        }).catch(error => {
+            console.error('Error saving edits:', error);
+            alert('An error occurred while saving edits.');
+        });
     }
 
     // Profile Navigation
@@ -520,6 +537,11 @@ document.addEventListener('DOMContentLoaded', function () {
     window.proceedToExecution = function () {
         window.location.href = '/execute';
     };
+
+    window.proceedToExecutionAndSendProfiles = function () {
+        collectAndSendEditedProfiles();
+        proceedToExecution();
+    }
 
     // Notifications
     function showError(message) {
