@@ -7,6 +7,7 @@ from pathlib import Path
 import Module.PreprocessingModule.flow
 import Module.SampleGenerationModule.flow
 import Module.ExecutionModule.flow
+from Module.ExecutionModule.format_questionnaire import add_few_shot_learning
 from UtilityFunctions import json_processing
 from Config.config import load_config, load
 from shutil import copy2
@@ -243,6 +244,36 @@ def delete_temp_file(filename):
         return jsonify({'success': True, 'message': f"{filename} deleted successfully"})
     return jsonify({'error': 'File not found'}), 404
 
+@app.route('/few-shot', methods=['POST'])
+def handle_few_shot():
+    """Adds few shot examples to processed survey by saving them to the processed_survey.json file."""
+    few_shot_dict = request.get_json()
+
+    if not isinstance(few_shot_dict, dict):
+        return jsonify({"error": "Invalid input format. Expected a dictionary."}), 400
+
+    try:
+        config_set = config_manager.get_config_set()
+        output_dir = config_set[3].output_dir
+        with open(output_dir / "processed_survey.json", 'r', encoding='utf-8') as f:
+            processed_data = json.load(f)
+
+        processed_data = add_few_shot_learning(processed_data, few_shot_dict)
+
+        with open(output_dir / "processed_survey.json", 'w') as f:
+            json.dump(processed_data, f, indent=2)
+        return jsonify({
+            'success': True
+        })
+
+    except Exception as e:
+        print(f"Few-shot processing error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 @app.route('/calibration', methods=['POST'])
 def handle_calibration():
     data = request.get_json()  # Change from request.json
@@ -381,7 +412,9 @@ def update_dimensions():
         dimensions = request.json.get('dimensions')
         if not dimensions:
             return jsonify({'error': 'No dimensions provided'}), 400
-        
+
+        # reset cached config because of changes to sample size (or other values in the future).
+        config_manager.clear()
         config_set = config_manager.get_config_set()
         output_dir = config_set[3].output_dir
         

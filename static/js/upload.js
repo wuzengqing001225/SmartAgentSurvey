@@ -326,6 +326,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelector('.action-buttons .btn').addEventListener('click', () => {
         document.getElementById('processingView').classList.remove('active');
         document.getElementById('calibrationView').classList.add('active');
+        sendFewShotExamples()
     });
 
     window.handleCalibration = function (enable) {
@@ -352,6 +353,27 @@ document.addEventListener('DOMContentLoaded', function () {
                 showError('Error during calibration');
             });
     };
+
+    function sendFewShotExamples() {
+        fetch('/few-shot', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(fewShotExamples)
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to send few-shot examples');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Few-shot examples successfully processed:', data);
+            })
+            .catch(error => {
+                console.error('Error sending few-shot examples:', error);
+                showError('Error during few-shot example submission');
+            });
+    }
 
     addClickHandlers();
 });
