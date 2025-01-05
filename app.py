@@ -612,6 +612,11 @@ def start_execution():
         config_set = config_manager.get_config_set()
         config = config_set[0]
         output_dir = config_set[3].output_dir
+        # Reset stop related things
+        ExecutionState.reset()
+        with open(output_dir / "stop.json", 'w') as f:
+            json.dump({'stopped': False}, f)
+
 
         # Load necessary data
         with open(output_dir / 'processed_survey.json', 'r', encoding='utf-8') as f:

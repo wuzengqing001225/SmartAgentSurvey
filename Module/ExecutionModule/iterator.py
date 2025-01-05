@@ -48,6 +48,7 @@ def merge_dicts_in_lexicographical_order(dict1, dict2):
 
 def questionnaire_iterator_segment(config_set, processed_data, question_segments, execution_order, sample_space, sample_space_size, sample_dimensions, upload = False, progress_file=None):
     config, llm_client, logger, output_manager = config_set
+    output_dir = config_set[3].output_dir
     survey_size = len(processed_data)
     answers = {}
     errors = {}
@@ -58,6 +59,11 @@ def questionnaire_iterator_segment(config_set, processed_data, question_segments
             progress = agent_id  * 100 / sample_space_size
             with open(progress_file, 'w') as f:
                 json.dump({'progress': progress}, f)
+
+        if ExecutionState.get_stop():
+            with open(output_dir / "stop.json", 'w') as f:
+                json.dump({'stopped': True}, f)
+                return answers, errors
 
 
         if not upload:
@@ -70,6 +76,12 @@ def questionnaire_iterator_segment(config_set, processed_data, question_segments
         errors[agent_id + 1] = []
 
         while current_question <= survey_size:
+            # repeat the stop-check for every segment, not just every agent
+            if ExecutionState.get_stop():
+                with open(output_dir / "stop.json", 'w') as f:
+                    json.dump({'stopped': True}, f)
+                    return answers, errors
+
             question_segment = find_all_by_first_element(question_segments, current_question)
 
             if len(question_segment) == 1:
@@ -123,7 +135,6 @@ def questionnaire_iterator(config_set, processed_data, execution_order, sample_s
     output_dir = config_set[3].output_dir
     answers = {}
     errors = {}
-    ExecutionState.reset()
 
     for agent_id in range(sample_space_size):
         # Update progress
