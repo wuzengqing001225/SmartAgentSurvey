@@ -535,7 +535,6 @@ body {
 }
 
 .dimension-name {
-    width: 200px;
     font-weight: 500;
 }
 
@@ -710,8 +709,7 @@ body {
 .profiles-container {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 1.5rem; 
-    justify-content: center; 
+    justify-content: left;
     padding: 1.5rem;
 }
 
@@ -759,13 +757,13 @@ body {
 }
 
 .results-container {
-    max-width: 1200px;
-    margin: 2rem auto;
-    padding: 2rem;
+    margin-left: var(--sidebar-width);
+    padding: 1.5rem;
     background: white;
     border-radius: 16px;
     box-shadow: var(--shadow-sm);
 }
+
 
 .total-samples {
     text-align: center;
@@ -964,12 +962,12 @@ body {
     background: white;
     border-radius: 8px;
     box-shadow: var(--shadow-sm);
-    padding: 1rem;
-    text-align: center; 
+    text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    margin-right: 1.5rem;
 }
 
 .profile-attribute {
@@ -1043,7 +1041,6 @@ body {
 }
 
 .dimension-name {
-    width: 150px;
     color: var(--text-secondary);
     font-weight: 500;
 }

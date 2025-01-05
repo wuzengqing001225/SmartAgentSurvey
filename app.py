@@ -287,8 +287,7 @@ def handle_profiles():
     try:
         df = pd.DataFrame(edited_profiles)
         config_set = config_manager.get_config_set()
-        _, _, logger, output_manager = config_set
-        output_dir = config_set[3].output_dir
+        _, _, _, output_manager = config_set
         output_manager.save_csv(df, "sample_space.csv")
 
         return jsonify({
@@ -296,7 +295,7 @@ def handle_profiles():
         })
 
     except Exception as e:
-        print(f"Few-shot processing error: {e}")
+        print(f"Profile saving error: {e}")
         return jsonify({
             'success': False,
             'error': str(e)

@@ -379,7 +379,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (data.is_upload) {
             const resultsContainer = document.getElementById('resultsView');
-            resultsView.style.display = 'flex';
+            resultsContainer.style.display = 'flex';
+            resultsContainer.style.padding = 0;
 
             resultsContainer.innerHTML = `
                 <div class="results-header">
@@ -404,7 +405,8 @@ document.addEventListener('DOMContentLoaded', function () {
             `).join('');
         } else {
             const resultsContainer = document.getElementById('resultsView');
-            resultsView.style.display = 'block';
+            resultsContainer.style.display = 'block';
+            resultsContainer.style.padding = 0;
 
             resultsContainer.innerHTML = `
                 <div class="results-header">
