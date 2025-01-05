@@ -8,6 +8,7 @@ import Module.PreprocessingModule.flow
 import Module.SampleGenerationModule.flow
 import Module.ExecutionModule.flow
 from Module.ExecutionModule.format_questionnaire import add_few_shot_learning
+from Module.ExecutionModule.iterator import ExecutionState
 from UtilityFunctions import json_processing
 from Config.config import load_config, load
 from shutil import copy2
@@ -508,11 +509,13 @@ def get_sample_results():
         if is_upload:
             # For uploaded samples, just read the CSV directly
             sampled_df = pd.read_csv(output_dir / 'sample_space.csv')
-            
-            if len(sampled_df) > 8:
-                samples = sampled_df['profile'].tolist()[:8]
-            else:
-                samples = sampled_df['profile'].tolist()
+
+            # removed for now
+            # if len(sampled_df) > 8:
+            #     samples = sampled_df['profile'].tolist()[:8]
+            # else:
+            #    samples = sampled_df['profile'].tolist()
+            samples = sampled_df['profile'].tolist()
 
             return jsonify({
                 'success': True,
@@ -527,10 +530,11 @@ def get_sample_results():
             
             sampled_df = pd.read_csv(output_dir / 'sample_space.csv')
 
-            if len(sampled_df) > 8:
-                samples = sampled_df.head(8).to_dict('records')
-            else:
-                samples = sampled_df.to_dict('records')
+            # if len(sampled_df) > 8:
+            #     samples = sampled_df.head(8).to_dict('records')
+            # else:
+            #     samples = sampled_df.to_dict('records')
+            samples = sampled_df.to_dict('records')
 
             return jsonify({
                 'success': True,
@@ -668,6 +672,8 @@ def start_execution():
                 upload_mode,
                 progress_file
             )
+            if ExecutionState.get_stop():
+                return jsonify({'success': True, 'stopped': True}), 200
 
             if not isinstance(answers, dict):
                 raise ValueError(f"Invalid answers format: {type(answers)}")
@@ -702,6 +708,46 @@ def start_execution():
             'success': False,
             'error': error_msg
         }), 500
+
+@app.route('/api/execution/stop', methods=['POST'])
+def stop_execution():
+    try:
+        ExecutionState.set_stop()
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Error setting stop status: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'stopped': False
+        })
+
+@app.route('/api/execution/stop', methods=['GET'])
+def get_stop_status():
+    try:
+        config_set = config_manager.get_config_set()
+        output_dir = config_set[3].output_dir
+        stop_file = output_dir / 'stop.json'
+        if not stop_file.exists():
+            return jsonify({
+                'success': True,
+                'stopped': False
+            })
+
+        with open(output_dir / 'stop.json', 'r+', encoding='utf-8') as f:
+            data = json.load(f)
+            return jsonify({
+                'success': True,
+                'stopped': data['stopped']
+            })
+    except Exception as e:
+        print(f"Error reading stop status: {str(e)}")  # Debug print
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'stopped': False
+        })
+
 
 @app.route('/api/execution/progress')
 def get_execution_progress():

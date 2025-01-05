@@ -3,6 +3,20 @@ from UtilityFunctions import json_processing
 from Module.ExecutionModule.format_questionnaire import format_range_question, format_full_question
 import Module.SampleGenerationModule.flow
 
+class ExecutionState:
+    stop = False
+    @classmethod
+    def reset(cls):
+        cls.stop = False
+
+    @classmethod
+    def set_stop(cls):
+        cls.stop = True
+
+    @classmethod
+    def get_stop(cls):
+        return cls.stop
+
 def find_all_by_first_element(nested_list, target):
     matches = []
     for sublist in nested_list:
@@ -44,6 +58,7 @@ def questionnaire_iterator_segment(config_set, processed_data, question_segments
             progress = agent_id  * 100 / sample_space_size
             with open(progress_file, 'w') as f:
                 json.dump({'progress': progress}, f)
+
 
         if not upload:
             sample_profile = Module.SampleGenerationModule.flow.format_single_profile(sample_space[agent_id], sample_dimensions)
@@ -105,15 +120,23 @@ def questionnaire_iterator_segment(config_set, processed_data, question_segments
 
 def questionnaire_iterator(config_set, processed_data, execution_order, sample_space, sample_space_size, sample_dimensions, upload = False, progress_file=None):
     config, llm_client, logger, output_manager = config_set
+    output_dir = config_set[3].output_dir
     answers = {}
     errors = {}
-    
+    ExecutionState.reset()
+
     for agent_id in range(sample_space_size):
         # Update progress
         if progress_file:
             progress = agent_id  * 100 / sample_space_size
             with open(progress_file, 'w') as f:
                 json.dump({'progress': progress}, f)
+
+        if ExecutionState.get_stop():
+            with open(output_dir / "stop.json", 'w') as f:
+                json.dump({'stopped': True}, f)
+                return answers, errors
+
 
         if not upload:
             sample_profile = Module.SampleGenerationModule.flow.format_single_profile(sample_space[agent_id], sample_dimensions)

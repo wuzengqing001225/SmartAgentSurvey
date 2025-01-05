@@ -424,6 +424,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const profilesContainer = document.getElementById('profilesContainer');
 
             // Generated samples: display as cards
+            // Why only 10 here?
             profilesContainer.innerHTML = data.samples.slice(0, 10).map((sample, index) => `
             <div class="profile-card" data-index="${index}">
                 <div class="profile-header">Profile ${index + 1}</div>
@@ -491,14 +492,11 @@ document.addEventListener('DOMContentLoaded', function () {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(editedProfiles)
         }).then(response => {
-            if (response.ok) {
-                alert('Edits saved successfully!');
-            } else {
-                alert('Failed to save edits.');
+            if (!response.ok) {
+                console.error('Failed to save edits.');
             }
         }).catch(error => {
             console.error('Error saving edits:', error);
-            alert('An error occurred while saving edits.');
         });
     }
 
