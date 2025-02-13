@@ -1393,9 +1393,20 @@ input:checked + .toggle-slider:before {
 }
 
 .execution-controls {
-    text-align: center;
-    margin: 2rem 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    justify-content: center;
+    width: 100%;
 }
+
+.sample-size-control {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
 
 .results-section {
     text-align: center;
@@ -1551,13 +1562,6 @@ input:checked + .toggle-slider:before {
     margin-top: 10px;
 }
 
-.sample-size-control {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-right: 1rem;
-}
-
 /* Label styling */
 .sample-size-control label {
     font-weight: 500;
@@ -1565,7 +1569,7 @@ input:checked + .toggle-slider:before {
 }
 
 /* Input styling */
-.sample-size-input {
+.number-input {
     width: 120px;
     padding: 0.75rem 1rem;
     border-radius: 8px;
@@ -1575,19 +1579,19 @@ input:checked + .toggle-slider:before {
     -moz-osx-font-smoothing: grayscale;
 }
 
-.sample-size-input:focus {
+.number-input:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: var(--shadow-sm);
 }
 
-.sample-size-input:hover {
+.number-input:hover {
     border-color: var(--primary-color);
 }
 
 /* Number input arrows styling */
-.sample-size-input::-webkit-inner-spin-button,
-.sample-size-input::-webkit-outer-spin-button {
+.number-input::-webkit-inner-spin-button,
+.number-input::-webkit-outer-spin-button {
     opacity: 1;
     height: 1.5rem;
     margin-right: 0.5rem;
@@ -1669,6 +1673,44 @@ input:checked + .toggle-slider:before {
     flex: 2; /* Inputs and selects get more space */
 }
 
+.execution-count-container {
+    margin-bottom: 15px;
+}
+
+.execution-count-input {
+    width: 80px;
+    padding: 5px;
+    font-size: 14px;
+    margin-left: 10px;
+}
+
+/* execution display in results */
+.nav-arrow {
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    padding: 0 10px;
+    cursor: pointer;
+    color: #333;
+}
+
+.nav-arrow:disabled {
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+.execution-info {
+    text-align: center;
+    margin: 10px 0;
+    font-size: 0.9em;
+    color: #666;
+}
+
+#executionTitle {
+    display: inline-block;
+    min-width: 200px;
+    text-align: center;
+}
 
 
 @keyframes spin {

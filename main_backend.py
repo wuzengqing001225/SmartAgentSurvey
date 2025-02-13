@@ -2,6 +2,7 @@ import Module.PreprocessingModule.flow
 import Module.SampleGenerationModule.flow
 import Module.ExecutionModule.flow
 from Config.config import load_config, load
+from Module.ExecutionModule.cost_estimation import cost_estimation
 from UtilityFunctions import json_processing
 
 if __name__ == "__main__":
@@ -50,7 +51,7 @@ if __name__ == "__main__":
     # processed_data = Module.ExecutionModule.flow.add_few_shot_learning(processed_data, few_shot_dict)
 
     # III-b. Cost estimation and change parameters
-    total_cost = Module.ExecutionModule.flow.cost_estimation(config_set, processed_data, question_segments, sample_space_size, sample_profile_0, json_processing.get_json_nested_value(config, "llm_settings.max_tokens"))
+    total_cost = cost_estimation(config_set, processed_data, question_segments, sample_space_size, sample_profile_0, json_processing.get_json_nested_value(config, "llm_settings.max_tokens"))
 
     # III-c. Format questionnaire
     execution_order = json_processing.get_json_nested_value(config, "user_preference.execution.order")

@@ -1,9 +1,16 @@
 let progressPollingInterval;
+let currentExecutionNum = 1;
+let totalExecutions = 1;
 
 document.addEventListener('DOMContentLoaded', function () {
     const startButton = document.getElementById('startExecution');
     const stopButton = document.getElementById('stopExecution');
     const stopModal = document.getElementById('stopModal');
+
+    const prevButton = document.getElementById('prevExecution');
+    const nextButton = document.getElementById('nextExecution');
+    const executionTitle = document.getElementById('executionTitle');
+
     stopButton.disabled = true;
 
     //stopping logic
@@ -48,6 +55,36 @@ document.addEventListener('DOMContentLoaded', function () {
                 stopMessage.textContent = error.message || 'An error occurred while sending the stop request.';
                 console.error('Error stopping execution:', error);
             });
+    });
+
+    function updateExecutionNavigation() {
+        fetch('/api/execution/summary')
+            .then(response => response.json())
+            .then(data => {
+                totalExecutions = data.total_executions || 1;
+                updateExecutionDisplay();
+            })
+            .catch(error => console.error('Error loading execution summary:', error));
+    }
+
+    function updateExecutionDisplay() {
+        executionTitle.textContent = `Execution Results ${currentExecutionNum}`;
+        prevButton.disabled = currentExecutionNum <= 1;
+        nextButton.disabled = currentExecutionNum >= totalExecutions;
+    }
+
+    prevButton.addEventListener('click', () => {
+        if (currentExecutionNum > 1) {
+            currentExecutionNum--;
+            updateExecutionDisplay();
+        }
+    });
+
+    nextButton.addEventListener('click', () => {
+        if (currentExecutionNum < totalExecutions) {
+            currentExecutionNum++;
+            updateExecutionDisplay();
+        }
     });
 
     // Load metrics
@@ -127,26 +164,32 @@ document.addEventListener('DOMContentLoaded', function () {
                             clearInterval(progressPollingInterval);
                             document.getElementById('progressIndicator').style.display = 'none';
                             showError(data.error);
-                            this.disabled = false;
                         }
                         return;
                     }
 
                     const progress = data.progress;
+                    const executionNum = data.current_execution || 1;
+                    const totalExecs = data.total_executions || 1;
+
+                    document.getElementById('currentExecution').textContent = executionNum;
+                    document.getElementById('totalExecutions').textContent = totalExecs;
+
                     progressBar.style.width = `${progress}%`;
                     progressText.textContent = `${Math.round(progress)}%`;
 
-                    if (progress >= 100) {
+                    if (progress >= 100 && executionNum >= totalExecs) {
                         clearInterval(progressPollingInterval);
                         setTimeout(() => {
                             document.getElementById('progressIndicator').style.display = 'none';
+                            document.getElementById('resultsSection').style.display = 'block';
+                            updateExecutionNavigation();
                         }, 500);
                     }
                 })
                 .catch(error => {
                     clearInterval(progressPollingInterval);
                     document.getElementById('progressIndicator').style.display = 'none';
-                    this.disabled = false;
                     showError('Error checking progress');
                 });
         }, 1000);
@@ -154,12 +197,13 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 window.downloadResults = function (format) {
-    window.location.href = `/api/execution/download/${format}`;
+    window.location.href = `/api/execution/download/${format}/${currentExecutionNum}`;
 };
 
 window.downloadSampleSpace = function () {
-    window.location.href = '/api/execution/download/samplespace';
+    window.location.href = `/api/execution/download/samplespace/${currentExecutionNum}`;
 };
+
 
 function showError(message) {
     const alert = document.createElement('div');

@@ -7,6 +7,7 @@ from pathlib import Path
 import Module.PreprocessingModule.flow
 import Module.SampleGenerationModule.flow
 import Module.ExecutionModule.flow
+from Module.ExecutionModule.cost_estimation import cost_estimation
 from Module.ExecutionModule.format_questionnaire import add_few_shot_learning
 from Module.ExecutionModule.iterator import ExecutionState
 from UtilityFunctions import json_processing
@@ -494,6 +495,25 @@ def save_dimensions():
         print(f"Error saving dimensions: {e}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/sample/settings', methods=['POST'])
+def save_sample_settings():
+    try:
+        executions = request.json.get('executions')
+        if not executions:
+            return jsonify({'error': 'No executions provided'}), 400
+        config_set = config_manager.get_config_set()
+        output_dir = config_set[3].output_dir
+
+        with open(output_dir / 'sample_settings.json', 'w') as f:
+            json.dump({'executions': executions}, f, indent=4)
+        return jsonify({
+            'success': True,
+            'message': 'Settings saved successfully'
+        })
+    except Exception as e:
+        print(f"Error saving settings: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/sample/results', methods=['GET'])
 def get_sample_results():
     
@@ -588,7 +608,7 @@ def get_execution_metrics():
             sample_profile_0 = sample_space[0]
                 
         # Calculate metrics
-        total_cost = Module.ExecutionModule.flow.cost_estimation(
+        total_cost = cost_estimation(
             config_set, 
             processed_data, 
             question_segments, 
@@ -753,13 +773,35 @@ def get_stop_status():
             'stopped': False
         })
 
+@app.route('/api/execution/summary')
+def get_execution_summary():
+    config_set = config_manager.get_config_set()
+    output_dir = config_set[3].output_dir
+    try:
+        with open(output_dir / "executions_summary.json", 'r') as f:
+            return jsonify(json.load(f))
+    except FileNotFoundError:
+        return jsonify({"total_executions": 1, "completed_executions": 0})
 
 @app.route('/api/execution/progress')
 def get_execution_progress():
     try:
         output_dir = config_manager.get_config_set()[3].output_dir
-        progress_file = output_dir / 'execution_progress.json'
-        
+
+        summary_path = output_dir / "executions_summary.json"
+        if summary_path.exists():
+            with open(summary_path, 'r') as f:
+                summary = json.load(f)
+                current_execution = summary.get('completed_executions', 0) + 1
+                total_executions = summary.get('total_executions', 1)
+        else:
+            current_execution = 1
+            total_executions = 1
+
+        # Get progress from current execution directory
+        execution_dir = output_dir / f"execution_{current_execution}"
+        progress_file = execution_dir / 'progress.json'
+
         if progress_file.exists():
             with open(progress_file, 'r') as f:
                 progress_data = json.load(f)
@@ -767,39 +809,63 @@ def get_execution_progress():
                     return jsonify({
                         'success': False,
                         'error': progress_data['error'],
-                        'progress': 0
+                        'progress': 0,
+                        'current_execution': current_execution,
+                        'total_executions': total_executions
                     })
                 return jsonify({
                     'success': True,
-                    'progress': progress_data['progress']
+                    'progress': progress_data.get('progress', 0),
+                    'current_execution': current_execution,
+                    'total_executions': total_executions
                 })
-        return jsonify({'success': False, 'progress': 0})
+        return jsonify({
+            'success': False,
+            'progress': 0,
+            'current_execution': current_execution,
+            'total_executions': total_executions
+        })
     except Exception as e:
         print(f"Error reading progress: {str(e)}")  # Debug print
         return jsonify({
             'success': False,
             'error': str(e),
-            'progress': 0
+            'progress': 0,
+            'current_execution': 1,
+            'total_executions': 1
         })
 
-@app.route('/api/execution/download/<format>')
-def download_results(format):
+@app.route('/api/execution/download/<format>/<int:execution_num>')
+def download_results(format, execution_num):
     try:
         output_dir = config_manager.get_config_set()[3].output_dir
-        
+        execution_dir = output_dir / f"execution_{execution_num}"
+
+        # Check if execution directory exists
+        if not execution_dir.exists():
+            return jsonify({'error': f'Execution {execution_num} not found'}), 404
+
         if format == 'json':
+            json_path = execution_dir / 'answers.json'
+            if not json_path.exists():
+                return jsonify({'error': 'Results file not found'}), 404
+
             return send_file(
-                output_dir / 'answers.json',
+                json_path,
                 mimetype='application/json',
                 as_attachment=True,
-                download_name='survey_responses.json'
+                download_name=f'survey_responses_execution_{execution_num}.json'
             )
-        
+
         elif format == 'csv':
+            json_path = execution_dir / 'answers.json'
+            if not json_path.exists():
+                return jsonify({'error': 'Results file not found'}), 404
+
             # Load JSON data
-            with open(output_dir / 'answers.json', 'r') as f:
+            with open(json_path, 'r') as f:
                 data = json.load(f)
-            
+
             # Convert to DataFrame
             rows = []
             for agent_id, responses in data.items():
@@ -813,21 +879,33 @@ def download_results(format):
                         continue
                     row[f"Q{q_id}"] = answer
                 rows.append(row)
-            
+
             df = pd.DataFrame(rows)
-            
+
             # Convert to CSV
             output = io.StringIO()
             df.to_csv(output, index=False)
             output.seek(0)
-            
+
             return send_file(
                 io.BytesIO(output.getvalue().encode('utf-8')),
                 mimetype='text/csv',
                 as_attachment=True,
-                download_name='survey_responses.csv'
+                download_name=f'survey_responses_execution_{execution_num}.csv'
             )
-            
+
+        elif format == 'samplespace':
+            sample_space_path = execution_dir / 'sample_space.csv'
+            if not sample_space_path.exists():
+                return jsonify({'error': 'Sample space file not found'}), 404
+
+            return send_file(
+                sample_space_path,
+                mimetype='text/csv',
+                as_attachment=True,
+                download_name=f'sample_space_execution_{execution_num}.csv'
+            )
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

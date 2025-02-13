@@ -389,8 +389,15 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="count-number">${data.total_samples}</div>
                     </div>
                 </div>
-                <div class="execution-button">
+                <!-- New wrapper div -->
+                <div class="execution-controls">
+                        <div class="sample-size-control">
+                        <label for="executionCountInput">Number of Executions:</label>
+                        <input type="number" id="executionCountInput" min="1" value="1" class="number-input">
+                        </div>
+                    <div class="execution-button">
                     <button class="btn primary" onclick="proceedToExecution()">Proceed to Execution</button>
+                    </div>
                 </div>
                 <div class="container-upload" id="profilesContainerUpload"></div>
             `;
@@ -415,17 +422,23 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="count-number">${data.total_samples}</div>
                     </div>
                 </div>
+                <!-- New wrapper div -->
+                <div class="execution-controls">
+                    <div class="sample-size-control">
+                    <label for="executionCountInput">Number of Executions:</label>
+                    <input type="number" id="executionCountInput" min="1" value="1" class="number-input">
+                </div>
                 <div class="execution-button">
                     <button class="btn primary" onclick="proceedToExecutionAndSendProfiles()">Proceed to Execution</button>
                 </div>
+            </div>
                 <div class="profiles-container" id="profilesContainer"></div>
             `;
 
             const profilesContainer = document.getElementById('profilesContainer');
 
             // Generated samples: display as cards
-            // Why only 10 here?
-            profilesContainer.innerHTML = data.samples.slice(0, 10).map((sample, index) => `
+            profilesContainer.innerHTML = data.samples.map((sample, index) => `
             <div class="profile-card" data-index="${index}">
                 <div class="profile-header">Profile ${index + 1}</div>
                 <div class="profile-attributes">
@@ -535,8 +548,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Navigation
     window.proceedToExecution = function () {
-        window.location.href = '/execute';
-    };
+        let executionCountInput = document.getElementById("executionCountInput");
+        let executionCount = executionCountInput ? executionCountInput.value : 1;
+
+        fetch('/sample/settings', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({executions: executionCount})
+        }).then(response => {
+            if (response.ok) {
+                window.location.href = '/execute';
+            } else {
+                alert("Error saving execution settings.");
+            }
+        }).catch(error => {
+            console.error("Error:", error);
+        });
+    }
 
     window.proceedToExecutionAndSendProfiles = function () {
         collectAndSendEditedProfiles();
