@@ -3,7 +3,7 @@ import json
 from Module.ExecutionModule.iterator import questionnaire_iterator_segment, questionnaire_iterator
 
 
-def questionnaire_execute_iterator(config_set, processed_data, question_segments, execution_order, sample_space, sample_space_size, sample_dimensions, segmentation=True, upload=False, progress_file=None):
+def questionnaire_execute_iterator(config_set, processed_data, question_segments, execution_order, sample_space, sample_space_size, sample_dimensions, segmentation=True, upload=False):
     output_dir = config_set[3].output_dir
 
     # Read number of executions from sample_settings.json
@@ -26,12 +26,9 @@ def questionnaire_execute_iterator(config_set, processed_data, question_segments
         config_set[3].set_execution_dir(execution_dir)
 
         # Create execution-specific progress file
-        if progress_file:
-            execution_progress_file = execution_dir / "progress.json"
-            with open(execution_progress_file, 'w') as f:
-                json.dump({'progress': 0}, f)
-        else:
-            execution_progress_file = None
+        execution_progress_file = execution_dir / "progress.json"
+        with open(execution_progress_file, 'w') as f:
+           json.dump({'progress': 0}, f)
 
         if segmentation:
             answers, errors = questionnaire_iterator_segment(
@@ -48,12 +45,5 @@ def questionnaire_execute_iterator(config_set, processed_data, question_segments
 
         all_answers[execution_num] = answers
         all_errors[execution_num] = errors
-
-        # Save summary file
-        with open(output_dir / "executions_summary.json", 'w') as f:
-            json.dump({
-                "total_executions": num_executions,
-                "completed_executions": execution_num
-            }, f)
 
     return all_answers, all_errors

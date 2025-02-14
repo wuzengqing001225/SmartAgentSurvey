@@ -13,6 +13,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     stopButton.disabled = true;
 
+    fetch('/sample/settings')
+        .then(response => response.json())
+        .then(data => {
+            totalExecutions = parseInt(data.executions) || 1;
+            document.getElementById('totalExecutions').textContent = totalExecutions;
+        })
+        .catch(error => {
+            console.error('Error loading settings:', error);
+        });
+
     //stopping logic
     stopButton.addEventListener('click', function () {
         clearInterval(progressPollingInterval);
@@ -57,15 +67,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     });
 
-    function updateExecutionNavigation() {
-        fetch('/api/execution/summary')
-            .then(response => response.json())
-            .then(data => {
-                totalExecutions = data.total_executions || 1;
-                updateExecutionDisplay();
-            })
-            .catch(error => console.error('Error loading execution summary:', error));
-    }
 
     function updateExecutionDisplay() {
         executionTitle.textContent = `Execution Results ${currentExecutionNum}`;
@@ -122,13 +123,18 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Start execution handler
-    document.getElementById('startExecution').addEventListener('click', function () {
+    startButton.addEventListener('click', function () {
         const progressBar = document.querySelector('.progress-bar-fill');
         const progressText = document.querySelector('.progress-text');
+        const progressIndicator = document.getElementById('progressIndicator')
+        const resultsSection = document.getElementById('resultsSection')
 
-        document.getElementById('progressIndicator').style.display = 'block';
+        progressIndicator.style.display = 'block';
+        resultsSection.style.display = 'none';
         startButton.disabled = true;
         stopButton.disabled = false;
+        currentExecutionNum = 1;
+        document.getElementById('currentExecution').textContent = '1'
 
         // Start execution
         fetch('/api/execution/start', {
@@ -146,7 +152,7 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .catch(error => {
                 document.getElementById('progressIndicator').style.display = 'none';
-                this.disabled = false;
+                startButton.disabled = false;
                 showError(error.message || 'Error during execution');
             })
             .finally(() => {
@@ -155,22 +161,24 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
         // Poll progress
+        let executionCompleted = false;
         progressPollingInterval = setInterval(() => {
-            fetch('/api/execution/progress')
+            fetch(`/api/execution/progress/${currentExecutionNum}`)
                 .then(response => response.json())
                 .then(data => {
                     if (!data.success) {
                         if (data.error) {
                             clearInterval(progressPollingInterval);
-                            document.getElementById('progressIndicator').style.display = 'none';
+                            progressIndicator.style.display = 'none';
                             showError(data.error);
+                            startButton.disabled = false;
                         }
                         return;
                     }
 
                     const progress = data.progress;
                     const executionNum = data.current_execution || 1;
-                    const totalExecs = data.total_executions || 1;
+                    const totalExecs = data.total_executions || totalExecutions;
 
                     document.getElementById('currentExecution').textContent = executionNum;
                     document.getElementById('totalExecutions').textContent = totalExecs;
@@ -178,18 +186,28 @@ document.addEventListener('DOMContentLoaded', function () {
                     progressBar.style.width = `${progress}%`;
                     progressText.textContent = `${Math.round(progress)}%`;
 
-                    if (progress >= 100 && executionNum >= totalExecs) {
-                        clearInterval(progressPollingInterval);
-                        setTimeout(() => {
-                            document.getElementById('progressIndicator').style.display = 'none';
-                            document.getElementById('resultsSection').style.display = 'block';
-                            updateExecutionNavigation();
-                        }, 500);
+                    if (progress >= 100 && !executionCompleted) {
+                        executionCompleted = true;
+                        if (currentExecutionNum < totalExecs) {
+                            currentExecutionNum++;
+                            executionCompleted = false;
+                            updateExecutionDisplay();
+                        } else {
+                            clearInterval(progressPollingInterval);
+                            setTimeout(() => {
+                                progressIndicator.style.display = 'none';
+                                updateExecutionDisplay();
+                                startButton.disabled = false;
+                                stopButton.disabled = true;
+                            }, 500);
+                        }
+
                     }
                 })
                 .catch(error => {
                     clearInterval(progressPollingInterval);
-                    document.getElementById('progressIndicator').style.display = 'none';
+                    progressIndicator.style.display = 'none';
+                    startButton.disabled = false;
                     showError('Error checking progress');
                 });
         }, 1000);
@@ -201,7 +219,7 @@ window.downloadResults = function (format) {
 };
 
 window.downloadSampleSpace = function () {
-    window.location.href = `/api/execution/download/samplespace/${currentExecutionNum}`;
+    window.location.href = `/api/execution/download/samplespace`;
 };
 
 
@@ -222,5 +240,5 @@ function resetUI() {
     progressText.textContent = '0%';
 
     document.getElementById('startExecution').disabled = false;
-    //document.getElementById('resultsSection').style.display = 'none';
+    document.getElementById('resultsSection').style.display = 'none';
 }
