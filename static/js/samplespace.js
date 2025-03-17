@@ -6,6 +6,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let sampleSizeInput = document.getElementById('sampleSizeInput');
     let settingsModalInput = document.getElementById('sample_size');
+    let generateCard = document.getElementById('generateCardIdThing');
+    generateCard.classList.remove('active');
+
 
     fetch('/api/settings')
         .then(response => response.json())
@@ -94,6 +97,17 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('methodSelectionView').classList.remove('active');
             document.getElementById('uploadView').classList.add('active');
         } else {
+
+            const originalContent = generateCard.innerHTML;
+            generateCard.innerHTML =  `
+                            <h3 id="header3text">
+                            <span class="spinner-card"></span>
+                            Generating Samples...</h3>
+                            <p>Create and customize sample dimensions</p>
+                            <div class="method-icon">⚙️</div>`;
+
+            // Disable the card click
+            //generateCard.style.pointerEvents = 'none';
             // Generate dimensions
             fetch('/sample/generate_dimensions', {
                 method: 'POST',
@@ -109,9 +123,18 @@ document.addEventListener('DOMContentLoaded', function () {
                         document.getElementById('dimensionsView').classList.add('active');
                     } else {
                         showError(data.error || 'Failed to generate dimensions');
+                        generateCard.innerHTML = originalContent;
+                        generateCard.style.pointerEvents = 'auto';
+                        generateCard.style.opacity = '1';
                     }
                 })
-                .catch(error => showError('Error generating dimensions'));
+                .catch(error => {
+                    showError('Error generating dimensions')
+                    generateCard.innerHTML = originalContent;
+                    generateCard.style.pointerEvents = 'auto';
+                    generateCard.style.opacity = '1';
+                });
+
         }
     };
 

@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const title = modal.querySelector('.modal-title');
 
         modal.dataset.currentQuestionId = questionId;
-        title.textContent = `Add Few-Shot Examples for Q${questionId}`;
+        title.textContent = `Add Individual Instructions for Q${questionId}`;
         textarea.value = fewShotExamples[questionId] || '';
 
         modal.classList.add('show');
@@ -242,21 +242,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const statusElement = questionItem.querySelector('.examples-status');
         statusElement.textContent = 'Examples added ✓';
     }
-
-    processButton.addEventListener('click', () => {
-        if (!currentSelectedFile) return;
-
-        updateFileStatus(currentSelectedFile, 'preprocessing');
-
-        fetch('/process', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                filename: currentSelectedFile,
-                fewShotExamples: fewShotExamples
-            })
-        })
-    });
 
     function renderFlowDiagram(flowImagePath) {
         document.getElementById('flowDiagram').innerHTML =
@@ -296,6 +281,9 @@ document.addEventListener('DOMContentLoaded', function () {
     processButton.addEventListener('click', () => {
         if (!currentSelectedFile) return;
 
+        const originalText = processButton.innerHTML;
+        processButton.disabled = true;
+        processButton.innerHTML = '<span class="spinner"></span> Processing...';
         updateFileStatus(currentSelectedFile, 'preprocessing');
 
         fetch('/process', {
@@ -313,12 +301,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     updateFileStatus(currentSelectedFile, 'DAG_ERROR');
                     document.getElementById('processingView').classList.remove('active');
                     document.getElementById('uploadView').classList.add('active');
+                    processButton.disabled = false;
+                    processButton.innerHTML = originalText;
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 showError('Processing error');
                 updateFileStatus(currentSelectedFile, 'unprocessed');
+                processButton.disabled = false;
+                processButton.innerHTML = originalText;
             });
     });
 

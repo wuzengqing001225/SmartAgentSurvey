@@ -223,6 +223,8 @@ body {
     color: var(--text-primary);
 }
 
+
+
 .process-button {
     background: var(--primary-color);
     color: white;
@@ -1360,7 +1362,7 @@ input:checked + .toggle-slider:before {
 
 .metrics-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 2rem;
     margin-bottom: 3rem;
 }
@@ -1547,14 +1549,35 @@ input:checked + .toggle-slider:before {
 }
 
 .spinner {
-    width: 40px;
-    height: 40px;
-    margin: 0 auto 15px auto;
-    border: 4px solid rgba(0, 0, 0, 0.1);
-    border-top: 4px solid #3498db;
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    vertical-align: middle;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid #ffffff;
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
+
+.spinner-card {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    vertical-align: middle;
+    border: 2px solid rgba(0, 0, 0, 0.3);
+    border-top: 2px solid #000000;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+
+button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
 
 #stopMessage {
     font-size: 16px;

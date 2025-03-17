@@ -36,6 +36,7 @@ def preprocess_survey(config_set, file_path: str):
         logger.info("Merging survey data")
         # processed_data = merge_survey_data(json.loads(analysis), raw_questions)
         processed_data = json.loads(analysis)
+        logger.info("Successfully loaded response as JSON!")
         
         # Output JSON
         output_manager.save_merged_data(processed_data)

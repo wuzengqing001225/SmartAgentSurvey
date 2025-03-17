@@ -1,11 +1,15 @@
 let progressPollingInterval;
 let currentExecutionNum = 1;
 let totalExecutions = 1;
+let completedExecutions = new Set();
+let executionFinished = false;
 
 document.addEventListener('DOMContentLoaded', function () {
     const startButton = document.getElementById('startExecution');
     const stopButton = document.getElementById('stopExecution');
     const stopModal = document.getElementById('stopModal');
+    const progressIndicator = document.getElementById('progressIndicator');
+    const resultsSection = document.getElementById('resultsSection');
 
     const prevButton = document.getElementById('prevExecution');
     const nextButton = document.getElementById('nextExecution');
@@ -23,6 +27,23 @@ document.addEventListener('DOMContentLoaded', function () {
             console.error('Error loading settings:', error);
         });
 
+    function updateExecutionDisplay() {
+        executionTitle.textContent = `Execution Results ${currentExecutionNum}`;
+        prevButton.disabled = currentExecutionNum <= 1;
+        nextButton.disabled = (currentExecutionNum >= totalExecutions) || (currentExecutionNum >= completedExecutions.size);
+    }
+
+    function showResults() {
+        if (completedExecutions.size > 0) {
+            resultsSection.style.display = 'block';
+            currentExecutionNum = Math.max(...Array.from(completedExecutions));
+            updateExecutionDisplay();
+        } else {
+            resultsSection.style.display = 'none';
+        }
+        progressIndicator.style.display = 'none';
+    }
+
     //stopping logic
     stopButton.addEventListener('click', function () {
         clearInterval(progressPollingInterval);
@@ -31,6 +52,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const stopMessage = document.querySelector('#stopMessage');
 
         stopMessage.textContent = 'Stopping execution...';
+
 
         fetch('/api/execution/stop', {method: 'POST'})
             .then(response => response.json())
@@ -43,15 +65,24 @@ document.addEventListener('DOMContentLoaded', function () {
                     fetch('/api/execution/stop')
                         .then(response => response.json())
                         .then(status => {
-                            if (status.stopped) {
+                            function finishExecution(message) {
                                 clearInterval(pollInterval);
-                                stopMessage.textContent = 'Execution stopped successfully.';
-                                resetUI();
+                                stopMessage.textContent = message;
+
+                                showResults();
+                                startButton.disabled = false;
 
                                 setTimeout(() => {
                                     stopModal.style.display = 'none';
-                                    startButton.disabled = false;
                                 }, 2000);
+                            }
+
+                            if (status.stopped) {
+                                finishExecution('Execution stopped successfully.');
+                            }
+                            if (executionFinished) {
+                                executionFinished = false;
+                                finishExecution('Execution already finished, stopping failed.')
                             }
                         })
                         .catch(error => {
@@ -68,12 +99,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 
-    function updateExecutionDisplay() {
-        executionTitle.textContent = `Execution Results ${currentExecutionNum}`;
-        prevButton.disabled = currentExecutionNum <= 1;
-        nextButton.disabled = currentExecutionNum >= totalExecutions;
-    }
-
     prevButton.addEventListener('click', () => {
         if (currentExecutionNum > 1) {
             currentExecutionNum--;
@@ -82,10 +107,92 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     nextButton.addEventListener('click', () => {
-        if (currentExecutionNum < totalExecutions) {
+        if (currentExecutionNum < totalExecutions && completedExecutions.has(currentExecutionNum + 1)) {
             currentExecutionNum++;
             updateExecutionDisplay();
         }
+    });
+
+    // Start execution handler
+    startButton.addEventListener('click', function () {
+        const progressBar = document.querySelector('.progress-bar-fill');
+        const progressText = document.querySelector('.progress-text');
+
+        completedExecutions.clear()
+        progressIndicator.style.display = 'block';
+        resultsSection.style.display = 'none';
+        startButton.disabled = true;
+        stopButton.disabled = false;
+        currentExecutionNum = 1;
+        document.getElementById('currentExecution').textContent = '1'
+
+        fetch('/api/execution/start', {
+            method: 'POST'
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    throw new Error(data.error || 'Execution failed');
+                } else {
+                    executionFinished = true;
+                }
+                if (data.hasOwnProperty("stopped") && data.stopped) {
+                    return;
+                }
+                document.getElementById('resultsSection').style.display = 'block';
+            })
+            .catch(error => {
+                document.getElementById('progressIndicator').style.display = 'none';
+                startButton.disabled = false;
+                showError(error.message || 'Error during execution');
+            });
+
+        progressPollingInterval = setInterval(() => {
+            fetch(`/api/execution/progress/${currentExecutionNum}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        if (data.error) {
+                            clearInterval(progressPollingInterval);
+                            showError(data.error);
+                            startButton.disabled = false;
+                        }
+                        return;
+                    }
+
+                    const progress = data.progress;
+                    const executionNum = data.current_execution || 1;
+                    const totalExecs = data.total_executions || totalExecutions;
+
+                    document.getElementById('currentExecution').textContent = executionNum;
+                    document.getElementById('totalExecutions').textContent = totalExecs;
+
+                    progressBar.style.width = `${progress}%`;
+                    progressText.textContent = `${Math.round(progress)}%`;
+
+                    if (progress >= 100) {
+                        completedExecutions.add(executionNum);
+
+                        if (currentExecutionNum < totalExecs) {
+                            currentExecutionNum = executionNum + 1;
+                            updateExecutionDisplay();
+                        } else {
+                            clearInterval(progressPollingInterval);
+                            showResults();
+                            progressIndicator.style.display = 'none';
+                            startButton.disabled = false;
+                            stopButton.disabled = true;
+                        }
+
+                    }
+                })
+                .catch(error => {
+                    clearInterval(progressPollingInterval);
+                    progressIndicator.style.display = 'none';
+                    startButton.disabled = false;
+                    showError('Error checking progress');
+                });
+        }, 1000);
     });
 
     // Load metrics
@@ -101,6 +208,7 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('agentCount').textContent = data.agent_count || '-';
             document.getElementById('estimatedCost').textContent =
                 data.estimated_cost ? parseFloat(data.estimated_cost).toFixed(5) : '-';
+            document.getElementById('executions').textContent = totalExecutions;
         })
         .catch(error => {
             console.error('Metrics error:', error);  // Debug log
@@ -122,96 +230,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Start execution handler
-    startButton.addEventListener('click', function () {
-        const progressBar = document.querySelector('.progress-bar-fill');
-        const progressText = document.querySelector('.progress-text');
-        const progressIndicator = document.getElementById('progressIndicator')
-        const resultsSection = document.getElementById('resultsSection')
 
-        progressIndicator.style.display = 'block';
-        resultsSection.style.display = 'none';
-        startButton.disabled = true;
-        stopButton.disabled = false;
-        currentExecutionNum = 1;
-        document.getElementById('currentExecution').textContent = '1'
-
-        // Start execution
-        fetch('/api/execution/start', {
-            method: 'POST'
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (!data.success) {
-                    throw new Error(data.error || 'Execution failed');
-                }
-                if (data.hasOwnProperty("stopped") && data.stopped) {
-                    return;
-                }
-                document.getElementById('resultsSection').style.display = 'block';
-            })
-            .catch(error => {
-                document.getElementById('progressIndicator').style.display = 'none';
-                startButton.disabled = false;
-                showError(error.message || 'Error during execution');
-            })
-            .finally(() => {
-                startButton.disabled = false;
-                stopButton.disabled = true;
-            });
-
-        // Poll progress
-        let executionCompleted = false;
-        progressPollingInterval = setInterval(() => {
-            fetch(`/api/execution/progress/${currentExecutionNum}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (!data.success) {
-                        if (data.error) {
-                            clearInterval(progressPollingInterval);
-                            progressIndicator.style.display = 'none';
-                            showError(data.error);
-                            startButton.disabled = false;
-                        }
-                        return;
-                    }
-
-                    const progress = data.progress;
-                    const executionNum = data.current_execution || 1;
-                    const totalExecs = data.total_executions || totalExecutions;
-
-                    document.getElementById('currentExecution').textContent = executionNum;
-                    document.getElementById('totalExecutions').textContent = totalExecs;
-
-                    progressBar.style.width = `${progress}%`;
-                    progressText.textContent = `${Math.round(progress)}%`;
-
-                    if (progress >= 100 && !executionCompleted) {
-                        executionCompleted = true;
-                        if (currentExecutionNum < totalExecs) {
-                            currentExecutionNum++;
-                            executionCompleted = false;
-                            updateExecutionDisplay();
-                        } else {
-                            clearInterval(progressPollingInterval);
-                            setTimeout(() => {
-                                progressIndicator.style.display = 'none';
-                                updateExecutionDisplay();
-                                startButton.disabled = false;
-                                stopButton.disabled = true;
-                            }, 500);
-                        }
-
-                    }
-                })
-                .catch(error => {
-                    clearInterval(progressPollingInterval);
-                    progressIndicator.style.display = 'none';
-                    startButton.disabled = false;
-                    showError('Error checking progress');
-                });
-        }, 1000);
-    });
 });
 
 window.downloadResults = function (format) {
@@ -229,16 +248,4 @@ function showError(message) {
     alert.textContent = message;
     document.body.appendChild(alert);
     setTimeout(() => alert.remove(), 3000);
-}
-
-function resetUI() {
-    document.getElementById('progressIndicator').style.display = 'none';
-
-    const progressBar = document.querySelector('.progress-bar-fill');
-    const progressText = document.querySelector('.progress-text');
-    progressBar.style.width = '0%';
-    progressText.textContent = '0%';
-
-    document.getElementById('startExecution').disabled = false;
-    document.getElementById('resultsSection').style.display = 'none';
 }
