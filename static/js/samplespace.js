@@ -99,15 +99,15 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
 
             const originalContent = generateCard.innerHTML;
-            generateCard.innerHTML =  `
+            generateCard.innerHTML = `
                             <h3 id="header3text">
                             <span class="spinner-card"></span>
-                            Generating Samples...</h3>
+                            Generating...</h3>
                             <p>Create and customize sample dimensions</p>
                             <div class="method-icon">⚙️</div>`;
 
             // Disable the card click
-            //generateCard.style.pointerEvents = 'none';
+            generateCard.style.pointerEvents = 'none';
             // Generate dimensions
             fetch('/sample/generate_dimensions', {
                 method: 'POST',
@@ -414,6 +414,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
                 <!-- New wrapper div -->
                 <div class="execution-controls">
+                    <div class="execution-button">
+                        <button class="btn primary" onclick="downloadSampleSpace()">Download Profiles</button>
+                    </div>
                         <div class="sample-size-control">
                         <label for="executionCountInput">Number of Executions:</label>
                         <input type="number" id="executionCountInput" min="1" value="1" class="number-input">
@@ -447,10 +450,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
                 <!-- New wrapper div -->
                 <div class="execution-controls">
+                    <div class="execution-button">
+                    <button class="btn primary" onclick="downloadSampleSpace()">Download Profiles</button>
+                </div>
                     <div class="sample-size-control">
                     <label for="executionCountInput">Number of Executions:</label>
                     <input type="number" id="executionCountInput" min="1" value="1" class="number-input">
-                </div>
+                    </div>
                 <div class="execution-button">
                     <button class="btn primary" onclick="proceedToExecutionAndSendProfiles()">Proceed to Execution</button>
                 </div>
@@ -508,6 +514,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         return `<input type="text" class="editable-input" data-key="${key}" data-index="${index}" value="${value}" />`;
+    }
+
+    window.downloadSampleSpace = function () {
+        collectAndSendEditedProfiles();
+        window.location.href = `/api/execution/download/samplespace`;
     }
 
     function collectAndSendEditedProfiles() {

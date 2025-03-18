@@ -82,7 +82,16 @@ document.addEventListener('DOMContentLoaded', function () {
                             }
                             if (executionFinished) {
                                 executionFinished = false;
+                                /* progress polling completes the last execution. However, the polling is cleared when clicking the button.
+                                   in this if statement we know that the last execution has been completed for sure. So we should add it to the set
+                                   and reload the results display accordingly.
+                                * */
+                                if(!completedExecutions.has(currentExecutionNum)) {
+                                    completedExecutions.add(currentExecutionNum)
+                                    showResults()
+                                }
                                 finishExecution('Execution already finished, stopping failed.')
+
                             }
                         })
                         .catch(error => {
@@ -133,11 +142,12 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(data => {
                 if (!data.success) {
                     throw new Error(data.error || 'Execution failed');
-                } else {
-                    executionFinished = true;
                 }
+                stopButton.disabled = true;
                 if (data.hasOwnProperty("stopped") && data.stopped) {
                     return;
+                } else {
+                    executionFinished = true;
                 }
                 document.getElementById('resultsSection').style.display = 'block';
             })
