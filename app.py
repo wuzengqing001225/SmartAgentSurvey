@@ -50,11 +50,14 @@ config_manager = ConfigManager()
 
 app = Flask(__name__)
 
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+
 UPLOAD_FOLDER = 'Data/UserUpload'
 ALLOWED_EXTENSIONS = {'doc', 'docx', 'pdf', 'txt', 'md', 'markdown'}
 PROCESS_STATUS_FILE = 'Data/process_status.json'
 CONFIG_FILE = 'Config/config.json'
 TEMP_FOLDER = 'static/temp'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(TEMP_FOLDER, exist_ok=True)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
