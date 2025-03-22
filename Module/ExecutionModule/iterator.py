@@ -158,9 +158,12 @@ def questionnaire_iterator(config_set, processed_data, execution_order, sample_s
         
         questions = format_full_question(processed_data, json_processing.get_json_nested_value(config, "llm_settings.max_tokens"))[0]
                     
+        profile_part = f"You act as a survey participant with the following profile: {sample_profile}\n"
+        format_part = """The output format should be in JSON, with each value structured as "question number: answer". Do not place ```json at the beginning. If you are asked to reason before/after answering a question, please put your reason and answer to the question in nested keys, like this: "question number: { 'reason': XXX, 'answer': XXX }"."""
+
         answer_text = llm_client.generate(
             prompt=f"""{execution_order}\n{questions}""",
-            system_prompt=f"""You act as a survey participant with the following profile: {sample_profile}\nThe output format should be in JSON, with each value structured as "question number: answer".  Do not place ```json at the beginning. If you are asked to reason before/after answering a question, please put your reason and answer to the question in nested keys, like this: "question number: {'reason': XXX, 'answer': XXX}"."""
+            system_prompt=profile_part + format_part
         )
 
         try:
