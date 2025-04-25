@@ -1,5 +1,5 @@
 from docx import Document
-import fitz  # PyMuPDF for PDF handling
+import pymupdf
 
 try:
     import win32com.client as win32  # for .doc files on Windows
@@ -114,7 +114,7 @@ def read_old_word_file(doc_path):
 
 def read_pdf_file(pdf_path):
     pdf_text = []
-    with fitz.open(pdf_path) as pdf:
+    with pymupdf.open(pdf_path) as pdf:
         for page in pdf:
             pdf_text.append(page.get_text())
     return "\n".join(clean_text(pdf_text)).encode('utf-8').decode('utf-8')
