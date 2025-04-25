@@ -2,7 +2,7 @@
     "llm_settings": {
         "provider": "openai",
         "api_key": "",
-        "model": "gpt-4o-mini",
+        "model": "gpt-4o",
         "max_tokens": 512,
         "temperature": 0
     },
