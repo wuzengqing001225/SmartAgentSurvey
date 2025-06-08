@@ -1,100 +1,103 @@
 {% extends "base.html" %}
 {% block content %}
-    <div class="container">
-        <div class="sidebar">
-            <h2>Upload History</h2>
-            <div class="history-list">
-                {% for item in history %}
-                    <div class="history-item {% if item.status == 'DAG_ERROR' %}dag-error{% endif %}"
-                         data-filename="{{ item.filename }}"
-                         data-status="{{ item.status }}">
-                        <div class="filename">{{ item.filename }}</div>
-                        <div class="upload-time">{{ item.upload_time }}</div>
-                        <div class="file-info">
-                            <span class="file-size">{{ (item.size / 1024)|round(1) }} KB</span>
-                            <span class="status-badge
+<div class="container">
+    <div class="sidebar">
+        <h2>Upload History</h2>
+        <div class="history-list">
+            {% for item in history %}
+            <div class="history-item {% if item.status == 'DAG_ERROR' %}dag-error{% endif %}"
+                data-filename="{{ item.filename }}" data-status="{{ item.status }}">
+                <div class="filename">{{ item.filename }}</div>
+                <div class="upload-time">{{ item.upload_time }}</div>
+                <div class="file-info">
+                    <span class="file-size">{{ (item.size / 1024)|round(1) }} KB</span>
+                    <span class="status-badge
                                     {% if item.status %}{{ item.status|lower }}{% else %}unprocessed{% endif %}">
                         {% if item.status %}{{ item.status|title }}{% else %}Unprocessed{% endif %}
                     </span>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <div class="execution-container">
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <div class="metric-label">Survey Length</div>
-                    <div id="surveyLength" class="metric-value">-</div>
-                    <div class="metric-unit">questions</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Total Agents</div>
-                    <div id="agentCount" class="metric-value">-</div>
-                    <div class="metric-unit">agents</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Estimated Cost</div>
-                    <div id="estimatedCost" class="metric-value">-</div>
-                    <div class="metric-unit">USD</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Executions</div>
-                    <div id="executions" class="metric-value">-</div>
-                    <div class="metric-unit">executions</div>
                 </div>
             </div>
-            <div id="stopModal" class="stop-modal">
-                <div class="stop-modal-content">
-                    <div class="spinner"></div>
-                    <p id="stopMessage">Stopping execution...</p>
-                </div>
-            </div>
-
-            <div class="execution-controls">
-                <button id="startExecution" class="btn primary">Start Execution</button>
-                <button id="stopExecution" class="btn primary">Stop Execution</button>
-            </div>
-
-            <div id="resultsSection" class="results-section" style="display: none;">
-                <h2>
-                    <button id="prevExecution" class="nav-arrow">&lt;</button>
-                    <span id="executionTitle">Execution Results</span>
-                    <button id="nextExecution" class="nav-arrow">&gt;</button>
-                </h2>
-                <div class="download-options">
-                    <div class="download-group">
-                        <h3>Execution Results</h3>
-                        <button onclick="downloadResults('json')" class="btn secondary">Download JSON</button>
-                        <button onclick="downloadResults('csv')" class="btn secondary">Download CSV</button>
-                    </div>
-                    <div class="download-group">
-                        <h3>Sample Profiles</h3>
-                        <button onclick="downloadSampleSpace()" class="btn secondary">Download CSV</button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="progressIndicator" class="progress-section" style="display: none;">
-                <div class="progress-container">
-                    <div class="progress-bar">
-                        <div class="progress-bar-fill"></div>
-                    </div>
-                    <div class="progress-text">0%</div>
-                </div>
-                <div class="execution-info">
-                    <span>Execution </span>
-                    <span id="currentExecution">1</span>
-                    <span> of </span>
-                    <span id="totalExecutions">-</span>
-                </div>
-                <div class="progress-message">Processing Survey Responses...</div>
-            </div>
+            {% endfor %}
         </div>
     </div>
+
+    <div class="execution-container">
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">Survey Length</div>
+                <div id="surveyLength" class="metric-value">-</div>
+                <div class="metric-unit">questions</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Total Agents</div>
+                <div id="agentCount" class="metric-value">-</div>
+                <div class="metric-unit">agents</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Estimated Cost</div>
+                <div id="estimatedCost" class="metric-value">-</div>
+                <div class="metric-unit">USD</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Executions</div>
+                <div id="executions" class="metric-value">-</div>
+                <div class="metric-unit">executions</div>
+            </div>
+        </div>
+        <div id="stopModal" class="stop-modal">
+            <div class="stop-modal-content">
+                <div class="spinner"></div>
+                <p id="stopMessage">Stopping execution...</p>
+            </div>
+        </div>
+
+        <div class="execution-controls">
+            <div class="execution-button">
+                <button id="startExecution" class="btn primary">Start Execution</button>
+            </div>
+            <div class="execution-button">
+                <button id="stopExecution" class="btn primary">Stop Execution</button>
+            </div>
+        </div>
+
+        <div id="resultsSection" class="results-section" style="display: none;">
+            <h2>
+                <button id="prevExecution" class="nav-arrow">&lt;</button>
+                <span id="executionTitle">Execution Results</span>
+                <button id="nextExecution" class="nav-arrow">&gt;</button>
+            </h2>
+            <div class="download-options">
+                <div class="download-group">
+                    <h3>Execution Results</h3>
+                    <button onclick="downloadResults('json')" class="btn secondary">Download JSON</button>
+                    <button onclick="downloadResults('csv')" class="btn secondary">Download CSV</button>
+                </div>
+                <div class="download-group">
+                    <h3>Sample Profiles</h3>
+                    <button onclick="downloadSampleSpace()" class="btn secondary">Download CSV</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="progressIndicator" class="progress-section" style="display: none;">
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-bar-fill"></div>
+                </div>
+                <div class="progress-text">0%</div>
+            </div>
+            <div class="execution-info">
+                <span>Execution </span>
+                <span id="currentExecution">1</span>
+                <span> of </span>
+                <span id="totalExecutions">-</span>
+            </div>
+            <div class="progress-message">Processing Survey Responses...</div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
-    <script src="{{ url_for('static', filename='js/execution.js') }}"></script>
+<script src="{{ url_for('static', filename='js/execution.js') }}"></script>
 {% endblock %}

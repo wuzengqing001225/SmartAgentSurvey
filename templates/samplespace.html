@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,32 +8,32 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
-{% extends "base.html" %}
 
-{% block content %}
+<body>
+    {% extends "base.html" %}
+
+    {% block content %}
     <div class="container">
         <div class="sidebar">
             <h2>Upload History</h2>
             <div class="history-list">
                 {% for item in history %}
-                    <div class="history-item {% if item.status == 'DAG_ERROR' %}dag-error{% endif %}"
-                         data-filename="{{ item.filename }}"
-                         data-status="{{ item.status }}">
-                        <div class="filename">{{ item.filename }}</div>
-                        <div class="upload-time">{{ item.upload_time }}</div>
-                        <div class="file-info">
-                            <span class="file-size">{{ (item.size / 1024)|round(1) }} KB</span>
-                            <span class="status-badge
+                <div class="history-item {% if item.status == 'DAG_ERROR' %}dag-error{% endif %}"
+                    data-filename="{{ item.filename }}" data-status="{{ item.status }}">
+                    <div class="filename">{{ item.filename }}</div>
+                    <div class="upload-time">{{ item.upload_time }}</div>
+                    <div class="file-info">
+                        <span class="file-size">{{ (item.size / 1024)|round(1) }} KB</span>
+                        <span class="status-badge
                                     {% if item.status %}{{ item.status|lower }}{% else %}unprocessed{% endif %}">
                             {% if item.status %}
-                                {{ item.status|title }}
+                            {{ item.status|title }}
                             {% else %}
-                                Unprocessed
+                            Unprocessed
                             {% endif %}
                         </span>
-                        </div>
                     </div>
+                </div>
                 {% endfor %}
             </div>
         </div>
@@ -59,11 +60,18 @@
             </div>
 
             <!-- Upload View -->
-            <div id="uploadView" class="view">
+            <div id="uploadView" class="view" style="position:relative;">
+                <button class="upload-back-btn" onclick="goBackToMethodSelection()">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    <span>Back</span>
+                </button>
                 <div class="sample-upload-area" id="sampleDropZone">
                     <div class="upload-message">
                         <img src="{{ url_for('static', filename='images/upload-icon.svg') }}" alt="Upload"
-                             class="upload-icon">
+                            class="upload-icon">
                         <p>Drop your sample profiles file or click to upload</p>
                         <p class="supported-formats">Text file with one profile per line</p>
                     </div>
@@ -78,16 +86,10 @@
                         <div class="dimension-actions">
                             <div class="sample-size-control">
                                 <label for="sampleSizeInput">Sample Size:</label>
-                                <input
-                                        type="number"
-                                        id="sampleSizeInput"
-                                        min="1"
-                                        max="1000"
-                                        class="number-input"
-                                        placeholder=""
-                                        title="Number of samples to generate (1-1000). Press enter to save."
-                                >
+                                <input type="number" id="sampleSizeInput" min="1" max="1000" class="number-input"
+                                    placeholder="" title="Number of samples to generate (1-1000). Press enter to save.">
                             </div>
+                            <button class="btn secondary" onclick="goBackToMethodSelection()">Previous Step</button>
                             <button class="btn secondary" onclick="addNewDimension()">Add Dimension</button>
                             <button class="btn primary" onclick="saveDimensions()">Save Dimensions</button>
                             <button class="btn primary" onclick="generateSamples()">Generate Samples</button>
@@ -127,9 +129,10 @@
                     <div id="sampleCount" class="count-number">0</div>
                 </div>
 
-
-
                 <div class="action-buttons">
+                    <button class="btn secondary" onclick="goBackToDimensions()">
+                        Previous Step
+                    </button>
                     <button class="btn primary" onclick="proceedToExecution()">
                         Proceed to Execution
                     </button>
@@ -141,10 +144,11 @@
             </div>
         </div>
     </div>
-{% endblock %}
+    {% endblock %}
 
-{% block scripts %}
+    {% block scripts %}
     <script src="{{ url_for('static', filename='js/samplespace.js') }}"></script>
-{% endblock %}
+    {% endblock %}
 </body>
+
 </html>

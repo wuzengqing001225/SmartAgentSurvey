@@ -166,9 +166,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     <button class="close-modal">&times;</button>
                     <h3 class="modal-title">Add Few-Shot Examples</h3>
                     <div class="modal-body">
-                        <textarea 
+                        <textarea
                             id="fewShotExamplesInput"
-                            class="examples-textarea" 
+                            class="examples-textarea"
                             placeholder="Enter your examples here (one per line)..."
                             rows="6"
                             style="width: 100%; margin: 1rem 0; padding: 0.5rem;"

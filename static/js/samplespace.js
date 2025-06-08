@@ -9,7 +9,6 @@ document.addEventListener('DOMContentLoaded', function () {
     let generateCard = document.getElementById('generateCardIdThing');
     generateCard.classList.remove('active');
 
-
     fetch('/api/settings')
         .then(response => response.json())
         .then(data => {
@@ -365,12 +364,15 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(error => showError('Error uploading file'));
     }
 
+    // Record how the user entered the total samples page
+    let lastEntryMethod = null; // 'generate' or 'upload'
+
     // Results Display
     function showResults(data, isUpload = false) {
         document.getElementById('uploadView').classList.remove('active');
         document.getElementById('dimensionsView').classList.remove('active');
         document.getElementById('resultsView').classList.add('active');
-
+        lastEntryMethod = isUpload ? 'upload' : 'generate';
         fetch('/sample/results')
             .then(response => response.json())
             .then(data => {
@@ -383,19 +385,29 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(error => showError('Error loading results'));
     }
 
+    // Add navigation function for going back to Sample Dimensions
+    window.goBackToDimensions = function() {
+        // Hide all views
+        document.getElementById('resultsView').classList.remove('active');
+        document.getElementById('resultsView').style.display = '';
+        document.getElementById('dimensionsView').classList.remove('active');
+        document.getElementById('dimensionsView').style.display = '';
+        document.getElementById('methodSelectionView').classList.remove('active');
+        document.getElementById('uploadView').classList.remove('active');
+        document.getElementById('profileView').classList.remove('active');
+        // Only show dimensionsView
+        document.getElementById('dimensionsView').classList.add('active');
+    };
+
     function renderResults(data) {
         document.querySelectorAll('.history-item').forEach(item => {
-            // Remove any existing active classes first
             item.classList.remove('active', 'active-processing');
-
             if (item.dataset.filename === currentFile) {
                 item.classList.add('active-processing');
-                // Update status badge if needed
                 const statusBadge = item.querySelector('.status-badge');
                 statusBadge.textContent = 'Sampled';
                 statusBadge.className = 'status-badge sampled';
             } else {
-                // Disable other items
                 item.classList.add('processing');
             }
         });
@@ -404,7 +416,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const resultsContainer = document.getElementById('resultsView');
             resultsContainer.style.display = 'flex';
             resultsContainer.style.padding = 0;
-
             resultsContainer.innerHTML = `
                 <div class="results-header">
                     <div class="sample-count">
@@ -412,25 +423,24 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="count-number">${data.total_samples}</div>
                     </div>
                 </div>
-                <!-- New wrapper div -->
                 <div class="execution-controls">
+                    <div class="execution-button">
+                        <button class="btn secondary" onclick="${lastEntryMethod === 'upload' ? 'goBackToMethodSelection()' : 'goBackToDimensions()'}">Previous Step</button>
+                    </div>
                     <div class="execution-button">
                         <button class="btn primary" onclick="downloadSampleSpace()">Download Profiles</button>
                     </div>
-                        <div class="sample-size-control">
+                    <div class="sample-size-control">
                         <label for="executionCountInput">Number of Executions:</label>
                         <input type="number" id="executionCountInput" min="1" value="1" class="number-input">
-                        </div>
+                    </div>
                     <div class="execution-button">
-                    <button class="btn primary" onclick="proceedToExecution()">Proceed to Execution</button>
+                        <button class="btn primary" onclick="proceedToExecution()">Proceed to Execution</button>
                     </div>
                 </div>
                 <div class="container-upload" id="profilesContainerUpload"></div>
             `;
-
             const profilesContainer = document.getElementById('profilesContainerUpload');
-
-            // Uploaded samples: display as text
             profilesContainer.innerHTML = data.samples.map((sample, index) => `
                 <div class="text-profile-upload">
                     <span><strong>Profile ${index + 1}:</strong> ${sample}</span>
@@ -440,7 +450,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const resultsContainer = document.getElementById('resultsView');
             resultsContainer.style.display = 'block';
             resultsContainer.style.padding = 0;
-
             resultsContainer.innerHTML = `
                 <div class="results-header">
                     <div class="sample-count">
@@ -448,25 +457,24 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="count-number">${data.total_samples}</div>
                     </div>
                 </div>
-                <!-- New wrapper div -->
                 <div class="execution-controls">
                     <div class="execution-button">
-                    <button class="btn primary" onclick="downloadSampleSpace()">Download Profiles</button>
-                </div>
-                    <div class="sample-size-control">
-                    <label for="executionCountInput">Number of Executions:</label>
-                    <input type="number" id="executionCountInput" min="1" value="1" class="number-input">
+                        <button class="btn secondary" onclick="${lastEntryMethod === 'upload' ? 'goBackToMethodSelection()' : 'goBackToDimensions()'}">Previous Step</button>
                     </div>
-                <div class="execution-button">
-                    <button class="btn primary" onclick="proceedToExecutionAndSendProfiles()">Proceed to Execution</button>
+                    <div class="execution-button">
+                        <button class="btn primary" onclick="downloadSampleSpace()">Download Profiles</button>
+                    </div>
+                    <div class="sample-size-control">
+                        <label for="executionCountInput">Number of Executions:</label>
+                        <input type="number" id="executionCountInput" min="1" value="1" class="number-input">
+                    </div>
+                    <div class="execution-button">
+                        <button class="btn primary" onclick="proceedToExecutionAndSendProfiles()">Proceed to Execution</button>
+                    </div>
                 </div>
-            </div>
                 <div class="profiles-container" id="profilesContainer"></div>
             `;
-
             const profilesContainer = document.getElementById('profilesContainer');
-
-            // Generated samples: display as cards
             profilesContainer.innerHTML = data.samples.map((sample, index) => `
             <div class="profile-card" data-index="${index}">
                 <div class="profile-header">Profile ${index + 1}</div>
@@ -498,8 +506,8 @@ document.addEventListener('DOMContentLoaded', function () {
             // Numeric value with constrained input
             const [min, max] = dimensionConfig.scale;
             return `
-            <input type="number" class="editable-input" 
-                data-key="${key}" data-index="${index}" 
+            <input type="number" class="editable-input"
+                data-key="${key}" data-index="${index}"
                 value="${value}" min="${min}" max="${max}" />
         `;
         } else if (dimensionConfig.options) {
@@ -579,6 +587,22 @@ document.addEventListener('DOMContentLoaded', function () {
         `).join('');
     }
 
+    // Notifications
+    function showError(message) {
+        const alert = document.createElement('div');
+        alert.className = 'error-alert';
+        alert.textContent = message;
+        document.body.appendChild(alert);
+        setTimeout(() => alert.remove(), 3000);
+    }
+
+    function showSuccess(message) {
+        const alert = document.createElement('div');
+        alert.className = 'success-alert';
+        alert.textContent = message;
+        document.body.appendChild(alert);
+        setTimeout(() => alert.remove(), 3000);
+    }
 
     // Navigation
     window.proceedToExecution = function () {
@@ -605,20 +629,23 @@ document.addEventListener('DOMContentLoaded', function () {
         proceedToExecution();
     }
 
-    // Notifications
-    function showError(message) {
-        const alert = document.createElement('div');
-        alert.className = 'error-alert';
-        alert.textContent = message;
-        document.body.appendChild(alert);
-        setTimeout(() => alert.remove(), 3000);
-    }
-
-    function showSuccess(message) {
-        const alert = document.createElement('div');
-        alert.className = 'success-alert';
-        alert.textContent = message;
-        document.body.appendChild(alert);
-        setTimeout(() => alert.remove(), 3000);
-    }
+    window.goBackToMethodSelection = function() {
+        // Hide all views under main-content
+        document.querySelectorAll('.main-content .view').forEach(view => {
+            view.classList.remove('active');
+        });
+        // Hide resultsView display
+        document.getElementById('resultsView').style.display = '';
+        // Only show method selection view
+        document.getElementById('methodSelectionView').classList.add('active');
+        // Restore generateCard button state
+        let generateCard = document.getElementById('generateCardIdThing');
+        generateCard.innerHTML = `
+            <h3 id="header3text">Generate Samples</h3>
+            <p>Create and customize sample dimensions</p>
+            <div class="method-icon">⚙️</div>
+        `;
+        generateCard.style.pointerEvents = 'auto';
+        generateCard.style.opacity = '1';
+    };
 });
