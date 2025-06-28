@@ -2,39 +2,57 @@ import json
 import difflib
 from Module.ExecutionModule.format_questionnaire import format_full_question
 from UtilityFunctions import json_processing
+import tiktoken
 
-def token_consumption_estimation(processed_data, question_segments, sample_space_size, sample_profile_0, output_max_token = 256):
+def token_consumption_estimation(processed_data, question_segments, sample_space_size, sample_profile_0, output_max_token = 256, model_name="gpt-4o"):
     full_question_list, full_output_length = format_full_question(processed_data, output_max_token)
 
-    input_english_chars_consumption = (len(full_question_list) + len(question_segments) * len(sample_profile_0)) * sample_space_size
-    output_english_chars_consumption = full_output_length * sample_space_size
+    if "claude" in model_name:
+        input_english_chars_consumption = (len(full_question_list) + len(question_segments) * len(sample_profile_0)) * sample_space_size
+        output_english_chars_consumption = full_output_length * sample_space_size
 
-    input_prompt_sample_dimension = 1590 + len(full_question_list)
-    input_prompt_preprocess = 1728 + len(full_question_list)
-    input_english_chars_consumption += input_prompt_sample_dimension + input_prompt_preprocess
+        input_prompt_sample_dimension = 1590 + len(full_question_list)
+        input_prompt_preprocess = 1728 + len(full_question_list)
+        input_english_chars_consumption += input_prompt_sample_dimension + input_prompt_preprocess
 
-    output_prompt_sample_dimension = 1024
-    output_prompt_preprocess = len(full_question_list) * 1.2
-    output_english_chars_consumption += output_prompt_sample_dimension + output_prompt_preprocess
+        output_prompt_sample_dimension = 1024
+        output_prompt_preprocess = len(full_question_list) * 1.2
+        output_english_chars_consumption += output_prompt_sample_dimension + output_prompt_preprocess
 
-    input_token_estimation = input_english_chars_consumption // 4
-    output_token_estimation = output_english_chars_consumption // 4
+        input_token_estimation = input_english_chars_consumption // 4
+        output_token_estimation = output_english_chars_consumption // 4
+        return input_token_estimation, output_token_estimation
+    else:
+        encoding = tiktoken.encoding_for_model(model_name)
 
-    return input_token_estimation, output_token_estimation
+        input_tokens = len(encoding.encode(full_question_list))
+        input_tokens += len(question_segments) * len(encoding.encode(sample_profile_0))
+        input_tokens *= sample_space_size
+
+        output_tokens = full_output_length * sample_space_size
+
+        input_prompt_sample_dimension = 1590 + len(full_question_list)
+        input_prompt_preprocess = 1728 + len(full_question_list)
+        input_tokens += input_prompt_sample_dimension + input_prompt_preprocess
+
+        output_prompt_sample_dimension = 1024
+        output_prompt_preprocess = int(len(full_question_list) * 1.2)
+        output_tokens += output_prompt_sample_dimension + output_prompt_preprocess
+        return input_tokens, output_tokens
+
 
 def cost_estimation(config_set, processed_data, question_segments, sample_space_size, sample_profile_0, output_max_token = 256):
     config, llm_client, logger, output_manager = config_set
     model_name = json_processing.get_json_nested_value(config, "llm_settings.model")
-    
-    input_token_estimation, output_token_estimation = token_consumption_estimation(processed_data, question_segments, sample_space_size, sample_profile_0, output_max_token)
 
+    input_token_estimation, output_token_estimation = token_consumption_estimation(processed_data, question_segments, sample_space_size, sample_profile_0, output_max_token)
     # Load pricing data from JSON
     with open('./Config/api_cost_1000.json', 'r') as file:
         pricing = json.load(file)
-    
+
     # Attempt to find the best match for the model name
     closest_match = difflib.get_close_matches(model_name, pricing.keys(), n=1, cutoff=0.5)
-    
+
     if not closest_match:
         # If no close match is found, return cost -1
         logger.error("Model price not found.")

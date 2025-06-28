@@ -3,7 +3,7 @@ import logging
 from typing import Dict, List, Optional, Union
 import anthropic
 import openai
-
+import base64
 class LLMClient:
     def __init__(self, config_path: str = "config.json", output_dir: str = './'):
         self.output_dir = output_dir
@@ -90,4 +90,53 @@ class LLMClient:
 
         except Exception as e:
             self.logger.error(f"Error generating response: {str(e)}")
+            raise
+
+    def generate_multimodal(self, file_path: str, prompt: str, system_prompt: Optional[str] = None,) -> str:
+        """
+        Upload a file to OpenAI and generate a response using multimodal processing.
+        This method is used for surveys containing images, where the LLM needs to analyze both text and images.
+        NOTE ONLY PDF files are supported for multimodal processing.
+        """
+
+        if not file_path.lower().endswith(".pdf"):
+            raise ValueError("Only PDF files are supported for multimodal processing.")
+
+        try:
+            # upload the file to OpenAI
+            file = self.client.files.create(
+                file=open(file_path, "rb"),
+                purpose="user_data",
+            )
+
+            messages = [
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "input_file",
+                                "file_id": file.id,
+                            },
+                            {
+                                "type": "input_text",
+                                "text": prompt,
+                            },
+                        ],
+                    },
+                ]
+
+            if system_prompt:
+                messages.insert(0, {"role": "user", "content": system_prompt})
+
+            # Call the OpenAI multimodal API
+            response = self.client.responses.create(
+                model=self.model,
+                input=messages
+            )
+
+            self.logger.info(f"Multimodal response: {response.output_text}")
+            return response.output_text
+
+        except Exception as e:
+            self.logger.error(f"Error in multimodal processing: {str(e)}")
             raise

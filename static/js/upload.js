@@ -56,6 +56,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         currentSelectedFile = filename;
         selectedFilename.textContent = filename;
+        selectedFilename.setAttribute('title', filename);
         selectedFileInfo.style.display = 'block';
 
         document.querySelectorAll('.history-item').forEach(item => {
@@ -281,6 +282,12 @@ document.addEventListener('DOMContentLoaded', function () {
     processButton.addEventListener('click', () => {
         if (!currentSelectedFile) return;
 
+        // Get selected mode from radio buttons
+        let mode = 'text';
+        if (document.getElementById('modeMultimodal').checked) {
+            mode = 'multimodal';
+        }
+
         const originalText = processButton.innerHTML;
         processButton.disabled = true;
         processButton.innerHTML = '<span class="spinner"></span> Processing...';
@@ -289,7 +296,7 @@ document.addEventListener('DOMContentLoaded', function () {
         fetch('/process', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({filename: currentSelectedFile})
+            body: JSON.stringify({filename: currentSelectedFile, mode: mode})
         })
             .then(response => response.json())
             .then(data => {

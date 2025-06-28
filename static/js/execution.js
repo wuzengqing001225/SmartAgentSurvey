@@ -5,6 +5,8 @@ let completedExecutions = new Set();
 let executionFinished = false;
 
 document.addEventListener('DOMContentLoaded', function () {
+    const multiModalCheckbox = document.getElementById('multiModalCheckbox');
+    const estimatedCostElem = document.getElementById('estimatedCost');
     const startButton = document.getElementById('startExecution');
     const stopButton = document.getElementById('stopExecution');
     const stopModal = document.getElementById('stopModal');
@@ -127,6 +129,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const progressBar = document.querySelector('.progress-bar-fill');
         const progressText = document.querySelector('.progress-text');
 
+
         completedExecutions.clear()
         progressIndicator.style.display = 'block';
         resultsSection.style.display = 'none';
@@ -135,8 +138,16 @@ document.addEventListener('DOMContentLoaded', function () {
         currentExecutionNum = 1;
         document.getElementById('currentExecution').textContent = '1'
 
+        const requestBody = {
+            multi_modal: multiModalCheckbox.checked
+        };
+
         fetch('/api/execution/start', {
-            method: 'POST'
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
         })
             .then(response => response.json())
             .then(data => {

@@ -178,6 +178,8 @@ def process_file():
         return jsonify({'error': 'Invalid request data'}), 400
 
     filename = data.get('filename')
+    # Get preprocessing mode from request, default to 'text' mode
+    mode = data.get('mode', 'text')
     if not filename or not os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], filename)):
         return jsonify({'error': 'Invalid filename'}), 400
 
@@ -196,10 +198,18 @@ def process_file():
         config_set = config_manager.get_config_set()
         config = config_set[0]
 
+        # Choose preprocessing flow based on mode
         if json_processing.get_json_nested_value(config, "debug_switch.preprocess"):
-            processed_data, question_segments, is_dag = Module.PreprocessingModule.flow.preprocess_survey(
-                config_set,
-                json_processing.get_json_nested_value(config, "user_preference.survey_path"))
+            if mode == 'multimodal':
+                # Multimodal mode: use file input for LLM, extract questions and image descriptions
+                processed_data, question_segments, is_dag = Module.PreprocessingModule.flow.preprocess_survey_multimodal(
+                    config_set,
+                    json_processing.get_json_nested_value(config, "user_preference.survey_path"))
+            else:
+                # Text mode: use original text-based preprocessing
+                processed_data, question_segments, is_dag = Module.PreprocessingModule.flow.preprocess_survey(
+                    config_set,
+                    json_processing.get_json_nested_value(config, "user_preference.survey_path"))
         else:
             processed_data, question_segments, is_dag = load('preprocess', config)
 
@@ -624,6 +634,7 @@ def execute():
 @app.route('/api/execution/metrics')
 def get_execution_metrics():
     try:
+
         config_set = config_manager.get_config_set()
         config = config_set[0]
         output_dir = config_set[3].output_dir
@@ -679,6 +690,8 @@ def get_execution_metrics():
 @app.route('/api/execution/start', methods=['POST'])
 def start_execution():
     try:
+        multi_modal = request.json.get('multi_modal', False)
+
         config_set = config_manager.get_config_set()
         config = config_set[0]
         output_dir = config_set[3].output_dir
@@ -739,6 +752,7 @@ def start_execution():
                 sample_dimensions,
                 segmentation,
                 upload_mode,
+                multi_modal
             )
             if ExecutionState.get_stop():
                 return jsonify({'success': True, 'stopped': True}), 200

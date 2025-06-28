@@ -1,8 +1,10 @@
-from Module.PreprocessingModule.File2QuestionTree.question_parser import extract_raw_questions, create_batch_prompt, merge_survey_data
+from Module.PreprocessingModule.File2QuestionTree.question_parser import extract_raw_questions, create_batch_prompt, merge_survey_data, create_batch_prompt_multimodal
 from Module.PreprocessingModule.File2QuestionTree.graph_builder import SurveyFlowVisualizer
 from Module.PreprocessingModule.file_convert import read_file
 from UtilityFunctions import json_processing
 import json
+
+SYSTEM_PROMPT="You are a survey analysis assistant. Strictly return JSON only, with no explanations or additional text. Do not place ```json at the beginning."
 
 def preprocess_survey(config_set, file_path: str):
     config, llm_client, logger, output_manager = config_set
@@ -13,23 +15,23 @@ def preprocess_survey(config_set, file_path: str):
             max_questions_per_segment = json_processing.get_json_nested_value(config, "user_preference.preprocessing.max_questions_per_segment")
         else:
             max_questions_per_segment = 20
-        
+
         # Load
         logger.info(f"Reading survey file: {file_path}")
         survey_text = read_file(file_path)
-        
+
         # Extract raw questions
         logger.info("Extracting raw questions from survey text")
         # raw_questions = extract_raw_questions(survey_text)
         # logger.info(f"Extracted {len(raw_questions)} questions")
-        
+
         # Create JSON
         logger.info("Creating analysis prompt")
         prompt = create_batch_prompt(survey_text)
-        
+
         analysis = llm_client.generate(
             prompt=prompt,
-            system_prompt="You are a survey analysis assistant. Strictly return JSON only, with no explanations or additional text. Do not place ```json at the beginning.",
+            system_prompt=SYSTEM_PROMPT,
             force_max_tokens = 16384
         )
 
@@ -37,14 +39,14 @@ def preprocess_survey(config_set, file_path: str):
         # processed_data = merge_survey_data(json.loads(analysis), raw_questions)
         processed_data = json.loads(analysis)
         logger.info("Successfully loaded response as JSON!")
-        
+
         # Output JSON
         output_manager.save_merged_data(processed_data)
-        
+
         # Visualization
         logger.info("Creating survey flow visualization")
         visualizer = SurveyFlowVisualizer(processed_data)
-        
+
         # DAG Check
         is_dag = visualizer.is_dag()
         logger.info(f"Survey flow DAG check: {'Valid' if is_dag else 'Invalid'}")
@@ -58,7 +60,7 @@ def preprocess_survey(config_set, file_path: str):
         question_segments = visualizer.split_question_segments(max_questions_per_segment = max_questions_per_segment)
 
         return processed_data, question_segments, is_dag
-    
+
     except Exception as e:
         logger.error(f"Error processing survey: {str(e)}", exc_info=True)
         raise
@@ -68,7 +70,7 @@ def preprocess_survey_load(config, processed_data):
         max_questions_per_segment = json_processing.get_json_nested_value(config, "user_preference.preprocessing.max_questions_per_segment")
     else:
         max_questions_per_segment = 20
-    
+
     visualizer = SurveyFlowVisualizer(processed_data)
     is_dag = visualizer.is_dag()
     question_segments = visualizer.split_question_segments(max_questions_per_segment = max_questions_per_segment)
@@ -90,7 +92,7 @@ def preprocess_survey_model_calibration(config_set, processed_data):
                     calibration_question = single_choice_problems[random.randint(0, len(single_choice_problems) - 1)]
             else:
                 calibration_question = preference_model_calibration.get('question')
-            
+
             calibration_question_text = json_processing.get_json_nested_value(processed_data, f'{calibration_question}.question')
             calibration_question_fulltext = f"{json_processing.get_json_nested_value(processed_data, f'{calibration_question}.question')}\nOptions: {','.join(json_processing.get_json_nested_value(processed_data, f'{calibration_question}.options'))}"
 
@@ -106,7 +108,58 @@ def preprocess_survey_model_calibration(config_set, processed_data):
             calibration_new_question, calibration_new_question_options = calibration_new_question_fulltext.split('\n')[0].strip(), calibration_new_question_fulltext.split('\n')[-1].strip().split(',')
             json_processing.append_question_to_json(output_manager.output_dir / "processed_survey.json", {"question": calibration_new_question, "options": calibration_new_question_options}, str(len(processed_data) + 1))
             logger.info("Model calibration question generated.")
-        
+
         except Exception as e:
             logger.error(f"Error generating model calibration: {str(e)}", exc_info=True)
             raise
+
+# Multimodal survey preprocessing using OpenAI file input (for surveys containing images)
+def preprocess_survey_multimodal(config_set, file_path: str):
+    """
+    Preprocess a survey file in multimodal mode (text + images) using OpenAI file input API.
+    This function uploads the file directly to the LLM, requests extraction of all questions and detailed descriptions of all images, and outputs a structured JSON.
+    """
+    config, llm_client, logger, output_manager = config_set
+
+    try:
+        # Max questions per segment
+        if json_processing.get_json_nested_value(config, "user_preference.preprocessing.max_questions_per_segment") != "not found":
+            max_questions_per_segment = json_processing.get_json_nested_value(config, "user_preference.preprocessing.max_questions_per_segment")
+        else:
+            max_questions_per_segment = 20
+
+        logger.info(f"Uploading survey file for multimodal analysis: {file_path}")
+
+        # Construct the multimodal prompt
+        multimodal_prompt = create_batch_prompt_multimodal ()
+        logger.info("Requesting LLM to analyze the multimodal survey file and extract questions with image descriptions.")
+
+        # Call the LLMClient's generate_multimodal method
+        analysis = llm_client.generate_multimodal(file_path, multimodal_prompt, system_prompt=SYSTEM_PROMPT)
+        processed_data = json.loads(analysis)
+        logger.info("Successfully loaded multimodal response as JSON!")
+
+        # Output JSON
+        output_manager.save_merged_data(processed_data)
+
+        # Visualization
+        logger.info("Creating survey flow visualization (multimodal mode)")
+        visualizer = SurveyFlowVisualizer(processed_data)
+
+        # DAG Check
+        is_dag = visualizer.is_dag()
+        logger.info(f"Survey flow DAG check: {'Valid' if is_dag else 'Invalid'}")
+
+        viz_path = output_manager.get_visualization_path()
+        if viz_path:
+            visualizer.visualize(viz_path)
+            logger.info(f"Visualization saved to: {viz_path}")
+
+        # Split survey to segments
+        question_segments = visualizer.split_question_segments(max_questions_per_segment = max_questions_per_segment)
+
+        return processed_data, question_segments, is_dag
+
+    except Exception as e:
+        logger.error(f"Error processing multimodal survey: {str(e)}", exc_info=True)
+        raise

@@ -1,3 +1,4 @@
 Data/
 *.pyc
 static/temp/
+Config/config.json
