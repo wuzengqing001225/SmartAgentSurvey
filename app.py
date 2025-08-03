@@ -178,8 +178,8 @@ def process_file():
         return jsonify({'error': 'Invalid request data'}), 400
 
     filename = data.get('filename')
-    # Get preprocessing mode from request, default to 'text' mode
-    mode = data.get('mode', 'text')
+    # Always use multimodal mode
+    mode = 'multimodal'
     if not filename or not os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], filename)):
         return jsonify({'error': 'Invalid filename'}), 400
 
@@ -198,18 +198,12 @@ def process_file():
         config_set = config_manager.get_config_set()
         config = config_set[0]
 
-        # Choose preprocessing flow based on mode
+        # Always use multimodal preprocessing
         if json_processing.get_json_nested_value(config, "debug_switch.preprocess"):
-            if mode == 'multimodal':
-                # Multimodal mode: use file input for LLM, extract questions and image descriptions
-                processed_data, question_segments, is_dag = Module.PreprocessingModule.flow.preprocess_survey_multimodal(
-                    config_set,
-                    json_processing.get_json_nested_value(config, "user_preference.survey_path"))
-            else:
-                # Text mode: use original text-based preprocessing
-                processed_data, question_segments, is_dag = Module.PreprocessingModule.flow.preprocess_survey(
-                    config_set,
-                    json_processing.get_json_nested_value(config, "user_preference.survey_path"))
+            # Multimodal mode: use file input for LLM, extract questions and image descriptions
+            processed_data, question_segments, is_dag = Module.PreprocessingModule.flow.preprocess_survey_multimodal(
+                config_set,
+                json_processing.get_json_nested_value(config, "user_preference.survey_path"))
         else:
             processed_data, question_segments, is_dag = load('preprocess', config)
 
@@ -690,7 +684,7 @@ def get_execution_metrics():
 @app.route('/api/execution/start', methods=['POST'])
 def start_execution():
     try:
-        multi_modal = request.json.get('multi_modal', False)
+        multi_modal = request.json.get('multi_modal', True)
 
         config_set = config_manager.get_config_set()
         config = config_set[0]

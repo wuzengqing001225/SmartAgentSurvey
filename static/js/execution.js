@@ -5,7 +5,6 @@ let completedExecutions = new Set();
 let executionFinished = false;
 
 document.addEventListener('DOMContentLoaded', function () {
-    const multiModalCheckbox = document.getElementById('multiModalCheckbox');
     const estimatedCostElem = document.getElementById('estimatedCost');
     const startButton = document.getElementById('startExecution');
     const stopButton = document.getElementById('stopExecution');
@@ -139,7 +138,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('currentExecution').textContent = '1'
 
         const requestBody = {
-            multi_modal: multiModalCheckbox.checked
+            multi_modal: true
         };
 
         fetch('/api/execution/start', {

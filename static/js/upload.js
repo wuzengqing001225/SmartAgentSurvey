@@ -282,11 +282,8 @@ document.addEventListener('DOMContentLoaded', function () {
     processButton.addEventListener('click', () => {
         if (!currentSelectedFile) return;
 
-        // Get selected mode from radio buttons
-        let mode = 'text';
-        if (document.getElementById('modeMultimodal').checked) {
-            mode = 'multimodal';
-        }
+        // Always use multimodal mode
+        const mode = 'multimodal';
 
         const originalText = processButton.innerHTML;
         processButton.disabled = true;
