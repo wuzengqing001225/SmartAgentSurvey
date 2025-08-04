@@ -651,7 +651,6 @@ def execute():
 @app.route('/api/execution/metrics')
 def get_execution_metrics():
     try:
-
         config_set = config_manager.get_config_set()
         config = config_set[0]
         output_dir = config_set[3].output_dir
@@ -659,14 +658,31 @@ def get_execution_metrics():
         # Load necessary data
         processed_survey_path = output_dir / 'processed_survey.json'
 
+        if not processed_survey_path.exists():
+            return jsonify({'error': 'Processed survey data not found. Please preprocess the survey first.'}), 404
+
         with open(processed_survey_path, 'r', encoding='utf-8') as f:
             processed_data = json.load(f)
 
-        question_segments = Module.PreprocessingModule.flow.preprocess_survey_load(config, processed_data)[0]
+        if not processed_data:
+            return jsonify({'error': 'Processed survey data is empty'}), 400
 
+        # Get question segments
+        question_segments_list, _ = Module.PreprocessingModule.flow.preprocess_survey_load(config, processed_data)
+        question_segments = len(question_segments_list) if question_segments_list else 1
+
+        # Load sample space
         sampled_df_path = output_dir / 'sample_space.csv'
+
+        if not sampled_df_path.exists():
+            return jsonify({'error': 'Sample space data not found. Please generate sample space first.'}), 404
+
         sampled_df = pd.read_csv(sampled_df_path)
 
+        if sampled_df.empty:
+            return jsonify({'error': 'Sample space is empty'}), 400
+
+        # Format sample space
         if not json_processing.get_json_nested_value(config, "user_preference.sample.upload"):
             sample_space, sample_space_size = Module.SampleGenerationModule.flow.format_sample_space(sampled_df)
         else:
@@ -676,13 +692,34 @@ def get_execution_metrics():
                 sample_space.append([id + 1, sample, 1])
             sample_space_size = len(sample_space)
 
+        if sample_space_size == 0:
+            return jsonify({'error': 'No samples found in sample space'}), 400
+
+        # Get sample profile for cost estimation
         if not json_processing.get_json_nested_value(config, "user_preference.sample.upload"):
-            with open(output_dir / "sample_dimensions.json", 'r') as file:
+            sample_dimensions_path = output_dir / "sample_dimensions.json"
+            if not sample_dimensions_path.exists():
+                return jsonify({'error': 'Sample dimensions not found'}), 404
+
+            with open(sample_dimensions_path, 'r') as file:
                 sample_dimensions = json.load(file)
-            sample_profile_0 = Module.SampleGenerationModule.flow.format_single_profile(sample_space[0],
-                                                                                        sample_dimensions)
+            sample_profile_0 = Module.SampleGenerationModule.flow.format_single_profile(sample_space[0], sample_dimensions)
         else:
-            sample_profile_0 = sample_space[0]
+            # For uploaded samples, sample_space[0] is [id, profile_data, count]
+            # We need the profile_data part (index 1) as a string
+            if isinstance(sample_space[0], list) and len(sample_space[0]) > 1:
+                sample_profile_0 = str(sample_space[0][1])
+            else:
+                sample_profile_0 = str(sample_space[0])
+
+        # Validate sample_profile_0
+        if not sample_profile_0 or sample_profile_0.strip() == "":
+            sample_profile_0 = "Default profile for cost estimation"
+
+        # Get max tokens setting
+        max_tokens = json_processing.get_json_nested_value(config, "llm_settings.max_tokens")
+        if max_tokens == "not found" or not max_tokens:
+            max_tokens = 256
 
         # Calculate metrics
         total_cost = cost_estimation(
@@ -691,17 +728,31 @@ def get_execution_metrics():
             question_segments,
             sample_space_size,
             sample_profile_0,
-            json_processing.get_json_nested_value(config, "llm_settings.max_tokens")
+            max_tokens
         )
+
+        # Handle cost estimation failure
+        if total_cost < 0:
+            return jsonify({'error': 'Cost estimation failed. Please check model configuration.'}), 400
 
         return jsonify({
             'survey_length': len(processed_data),
             'agent_count': sample_space_size,
-            'estimated_cost': float(total_cost)
+            'estimated_cost': float(total_cost),
+            'question_segments': question_segments
         })
+
+    except FileNotFoundError as e:
+        print(f"File not found in metrics: {str(e)}")
+        return jsonify({'error': f'Required file not found: {str(e)}'}), 404
+    except json.JSONDecodeError as e:
+        print(f"JSON decode error in metrics: {str(e)}")
+        return jsonify({'error': f'Invalid JSON data: {str(e)}'}), 400
     except Exception as e:
         print(f"Error in metrics: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
 
 
 @app.route('/api/execution/start', methods=['POST'])
