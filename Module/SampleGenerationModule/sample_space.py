@@ -28,13 +28,13 @@ def parse_dimensions(dimensions):
         if "scale" in settings:
             start, end, step = settings["scale"]
             values = list(range(start, end + 1, step))
-            probabilities = [1 / len(values)] * len(values)  # 均匀分布
+            probabilities = [1 / len(values)] * len(values)  # Uniform distribution
         elif "options" in settings:
             values = settings["options"]
             if "distribution" in settings:
                 probabilities = [p / sum(settings["distribution"]) for p in settings["distribution"]]
             else:
-                probabilities = [1 / len(values)] * len(values)  # 均匀分布
+                probabilities = [1 / len(values)] * len(values)  # Uniform distribution
         else:
             values = []
             probabilities = []
@@ -132,13 +132,13 @@ def visualize_distribution_comparison(parsed_dimensions, sampled_df, adjusted_df
     for idx, dimension in enumerate(over_threshold_dimensions, start=1):
         target_probs = parsed_dimensions[dimension]["probabilities"]
         target_labels = parsed_dimensions[dimension]["values"]
-        
+
         original_counts = sampled_df[dimension].value_counts(normalize=True)
         original_probs = [original_counts.get(value, 0) for value in target_labels]
 
         adjusted_counts = adjusted_df[dimension].value_counts(normalize=True)
         adjusted_probs = [adjusted_counts.get(value, 0) for value in target_labels]
-        
+
         plt.subplot(rows, 2, idx)
         width = 0.25
         x = np.arange(len(target_labels))

@@ -3,7 +3,7 @@ import json
 from Module.ExecutionModule.iterator import questionnaire_iterator_segment, questionnaire_iterator
 
 
-def questionnaire_execute_iterator(config_set, processed_data, question_segments, execution_order, sample_space, sample_space_size, sample_dimensions, segmentation=True, upload=False):
+def questionnaire_execute_iterator(config_set, processed_data, question_segments, execution_order, sample_space, sample_space_size, sample_dimensions, segmentation=True, upload=False, multi_modal=False):
     output_dir = config_set[3].output_dir
 
     # Read number of executions from sample_settings.json
@@ -34,13 +34,13 @@ def questionnaire_execute_iterator(config_set, processed_data, question_segments
             answers, errors = questionnaire_iterator_segment(
                 config_set, processed_data, question_segments, execution_order,
                 sample_space, sample_space_size, sample_dimensions, upload,
-                execution_progress_file
+                execution_progress_file, multi_modal
             )
         else:
             answers, errors = questionnaire_iterator(
                 config_set, processed_data, execution_order,
                 sample_space, sample_space_size, sample_dimensions, upload,
-                execution_progress_file
+                execution_progress_file, multi_modal
             )
 
         all_answers[execution_num] = answers

@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Survey Upload System</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern-style.css') }}">
 </head>
+
 <body>
     {% extends "base.html" %}
 
@@ -15,18 +17,18 @@
             <h2>Upload History</h2>
             <div class="history-list">
                 {% for item in history %}
-                <div class="history-item {% if item.status == 'DAG_ERROR' %}dag-error{% endif %}" 
-                     data-filename="{{ item.filename }}"
-                     data-status="{{ item.status }}">
-                    <div class="filename">{{ item.filename }}</div>
+                <div class="history-item {% if item.status == 'DAG_ERROR' %}dag-error{% endif %}"
+                    data-filename="{{ item.filename }}" data-status="{{ item.status }}">
+                    <div class="filename" title="{{ item.filename }}">{{ item.filename }}</div>
                     <div class="upload-time">{{ item.upload_time }}</div>
                     <div class="file-info">
                         <span class="file-size">{{ (item.size / 1024)|round(1) }} KB</span>
-                        <span class="status-badge {% if item.status %}{{ item.status|lower }}{% else %}unprocessed{% endif %}">
+                        <span
+                            class="status-badge {% if item.status %}{{ item.status|lower }}{% else %}unprocessed{% endif %}">
                             {% if item.status %}
-                                {{ item.status|title }}
+                            {{ item.status|title }}
                             {% else %}
-                                Unprocessed
+                            Unprocessed
                             {% endif %}
                         </span>
                     </div>
@@ -38,18 +40,24 @@
         <div class="main-content">
             <!-- Upload View -->
             <div id="uploadView" class="view active">
-                <div class="upload-area" id="dropZone">
+                <div class="upload-area" id="dropZone" tabindex="0" role="button" aria-label="Upload files"
+                    onkeydown="if(event.key==='Enter'||event.key===' '){document.getElementById('fileInput').click()}">
                     <div class="upload-message">
-                        <img src="{{ url_for('static', filename='images/upload-icon.svg') }}" alt="Upload" class="upload-icon">
+                        <img src="{{ url_for('static', filename='images/upload-icon.svg') }}" alt="" class="upload-icon"
+                            aria-hidden="true">
                         <p>Drop files here or click to upload</p>
-                        <p class="supported-formats">Supported formats: DOCX, PDF, TXT, MD, Markdown</p>
+                        <p class="supported-formats">Supported formats: DOCX, PDF, TXT, MD</p>
                     </div>
-                    <input type="file" id="fileInput" accept=".docx,.pdf,.txt,.md,.markdown" hidden>
+                    <input type="file" id="fileInput" accept=".docx,.pdf,.txt,.md" hidden
+                        aria-describedby="upload-description">
+                    <div id="upload-description" class="sr-only">
+                        Upload survey files in DOCX, PDF, TXT, or MD format
+                    </div>
                 </div>
-                
+
                 <div id="selectedFileInfo" class="selected-file-info" style="display: none;">
                     <div class="selected-file-content">
-                        <div class="selected-filename"></div>
+                        <div class="selected-filename" title=""></div>
                         <button class="process-button" id="processButton">Process File</button>
                     </div>
                 </div>
@@ -60,7 +68,7 @@
                 <div class="question-count">
                     Total Questions: <span id="totalQuestions">0</span>
                 </div>
-                
+
                 <div class="workspace">
                     <div class="questions-panel">
                         <h3>Survey Questions</h3>
@@ -72,7 +80,7 @@
                         <div class="diagram-container" id="flowDiagram"></div>
                     </div>
                 </div>
-                
+
                 <div class="action-buttons">
                     <button class="btn primary">Next Step</button>
                 </div>
@@ -97,4 +105,5 @@
     <script src="{{ url_for('static', filename='js/upload.js') }}"></script>
     {% endblock %}
 </body>
+
 </html>

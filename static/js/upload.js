@@ -56,6 +56,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         currentSelectedFile = filename;
         selectedFilename.textContent = filename;
+        selectedFilename.setAttribute('title', filename);
         selectedFileInfo.style.display = 'block';
 
         document.querySelectorAll('.history-item').forEach(item => {
@@ -166,16 +167,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     <button class="close-modal">&times;</button>
                     <h3 class="modal-title">Add Few-Shot Examples</h3>
                     <div class="modal-body">
-                        <textarea 
+                        <textarea
                             id="fewShotExamplesInput"
-                            class="examples-textarea" 
+                            class="examples-textarea"
                             placeholder="Enter your examples here (one per line)..."
                             rows="6"
                             style="width: 100%; margin: 1rem 0; padding: 0.5rem;"
                         ></textarea>
                     </div>
                     <div class="modal-footer" style="text-align: right; margin-top: 1rem;">
-                        <button class="save-examples" style="padding: 0.5rem 1rem; background: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        <button class="save-examples" style="padding: 0.5rem 1rem; background: #8fa4f3; color: white; border: none; border-radius: 4px; cursor: pointer;">
                             Save Examples
                         </button>
                     </div>
@@ -244,8 +245,303 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function renderFlowDiagram(flowImagePath) {
-        document.getElementById('flowDiagram').innerHTML =
-            `<img src="/${flowImagePath}" alt="Survey Flow Diagram">`;
+        document.getElementById('flowDiagram').innerHTML = `
+            <div class="flow-diagram-wrapper">
+                <div class="flow-controls">
+                    <button class="flow-btn" id="zoomOut" title="Zoom Out" aria-label="Zoom out diagram">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="M21 21l-4.35-4.35"></path>
+                            <line x1="8" y1="11" x2="14" y2="11"></line>
+                        </svg>
+                    </button>
+                    <span class="zoom-level" id="zoomLevel">100%</span>
+                    <button class="flow-btn" id="zoomIn" title="Zoom In" aria-label="Zoom in diagram">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="M21 21l-4.35-4.35"></path>
+                            <line x1="11" y1="8" x2="11" y2="14"></line>
+                            <line x1="8" y1="11" x2="14" y2="11"></line>
+                        </svg>
+                    </button>
+                    <button class="flow-btn" id="resetZoom" title="Reset Zoom" aria-label="Reset diagram zoom">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                            <path d="M3 3v5h5"></path>
+                        </svg>
+                    </button>
+                    <button class="flow-btn" id="fullscreen" title="Fullscreen View" aria-label="View diagram in fullscreen">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="flow-image-container loading" id="flowImageContainer">
+                    <img src="/${flowImagePath}" alt="Survey Flow Diagram" id="flowImage" draggable="false">
+                    <div class="flow-hint">
+                        💡 Use mouse wheel to zoom, drag to move view, click fullscreen button for larger view
+                    </div>
+                </div>
+            </div>
+        `;
+
+        initializeFlowDiagramControls();
+    }
+
+    function initializeFlowDiagramControls() {
+        let currentZoom = 1;
+        let isDragging = false;
+        let startX, startY, scrollLeft, scrollTop;
+
+        const container = document.getElementById('flowImageContainer');
+        const image = document.getElementById('flowImage');
+        const zoomInBtn = document.getElementById('zoomIn');
+        const zoomOutBtn = document.getElementById('zoomOut');
+        const resetZoomBtn = document.getElementById('resetZoom');
+        const fullscreenBtn = document.getElementById('fullscreen');
+        const zoomLevel = document.getElementById('zoomLevel');
+
+        // Zoom functionality
+        function updateZoom(newZoom) {
+            currentZoom = Math.max(0.25, Math.min(3, newZoom));
+            image.style.transform = `scale(${currentZoom})`;
+            zoomLevel.textContent = `${Math.round(currentZoom * 100)}%`;
+
+            // Update button states
+            zoomOutBtn.disabled = currentZoom <= 0.25;
+            zoomInBtn.disabled = currentZoom >= 3;
+        }
+
+        zoomInBtn.addEventListener('click', () => updateZoom(currentZoom + 0.25));
+        zoomOutBtn.addEventListener('click', () => updateZoom(currentZoom - 0.25));
+        resetZoomBtn.addEventListener('click', () => updateZoom(1));
+
+        // Mouse wheel zoom
+        container.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            updateZoom(currentZoom + delta);
+        });
+
+        // Drag functionality
+        container.addEventListener('mousedown', (e) => {
+            if (currentZoom > 1) {
+                isDragging = true;
+                container.style.cursor = 'grabbing';
+                startX = e.pageX - container.offsetLeft;
+                startY = e.pageY - container.offsetTop;
+                scrollLeft = container.scrollLeft;
+                scrollTop = container.scrollTop;
+            }
+        });
+
+        container.addEventListener('mouseleave', () => {
+            isDragging = false;
+            container.style.cursor = currentZoom > 1 ? 'grab' : 'default';
+        });
+
+        container.addEventListener('mouseup', () => {
+            isDragging = false;
+            container.style.cursor = currentZoom > 1 ? 'grab' : 'default';
+        });
+
+        container.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            const x = e.pageX - container.offsetLeft;
+            const y = e.pageY - container.offsetTop;
+            const walkX = (x - startX) * 2;
+            const walkY = (y - startY) * 2;
+            container.scrollLeft = scrollLeft - walkX;
+            container.scrollTop = scrollTop - walkY;
+        });
+
+        // Fullscreen functionality
+        fullscreenBtn.addEventListener('click', () => {
+            openFlowDiagramModal();
+        });
+
+        // Image loading handling
+        image.addEventListener('load', () => {
+            container.classList.remove('loading');
+            image.classList.add('loaded');
+
+            // Check image size, auto-scale if too large
+            const containerRect = container.getBoundingClientRect();
+            const imageRect = image.getBoundingClientRect();
+
+            if (imageRect.width > containerRect.width * 0.9 || imageRect.height > containerRect.height * 0.9) {
+                const scaleX = (containerRect.width * 0.9) / imageRect.width;
+                const scaleY = (containerRect.height * 0.9) / imageRect.height;
+                const autoScale = Math.min(scaleX, scaleY, 1);
+                updateZoom(autoScale);
+            }
+        });
+
+        image.addEventListener('error', () => {
+            container.classList.remove('loading');
+            container.innerHTML = `
+                <div class="flow-error">
+                    <div class="flow-error-icon">⚠️</div>
+                    <div class="flow-error-message">Unable to load flow diagram</div>
+                    <div class="flow-error-hint">Please check if file exists or try again later</div>
+                </div>
+            `;
+        });
+
+        // Initialize
+        updateZoom(1);
+        container.style.cursor = 'default';
+    }
+
+    function openFlowDiagramModal() {
+        const image = document.getElementById('flowImage');
+        const modal = document.createElement('div');
+        modal.className = 'flow-modal';
+        modal.innerHTML = `
+            <div class="flow-modal-content">
+                <div class="flow-modal-header">
+                    <h3>Survey Flow Diagram</h3>
+                    <button class="flow-modal-close" aria-label="Close fullscreen view">&times;</button>
+                </div>
+                <div class="flow-modal-body">
+                    <img src="${image.src}" alt="Survey Flow Diagram" class="flow-modal-image" id="modalFlowImage">
+                    <div class="flow-shortcuts">
+                        <div><kbd>ESC</kbd> Close</div>
+                        <div><kbd>+</kbd> Zoom In</div>
+                        <div><kbd>-</kbd> Zoom Out</div>
+                        <div><kbd>0</kbd> Reset</div>
+                        <div><kbd>F</kbd> Fit Window</div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Zoom control within modal
+        let modalZoom = 1;
+        const modalImage = modal.querySelector('#modalFlowImage');
+        const modalBody = modal.querySelector('.flow-modal-body');
+
+        function updateModalZoom(newZoom) {
+            modalZoom = Math.max(0.1, Math.min(5, newZoom));
+            modalImage.style.transform = `scale(${modalZoom})`;
+            modalImage.classList.toggle('zoomed', modalZoom > 1);
+        }
+
+        function fitToWindow() {
+            const bodyRect = modalBody.getBoundingClientRect();
+            const imageRect = modalImage.getBoundingClientRect();
+            const scaleX = (bodyRect.width * 0.9) / (imageRect.width / modalZoom);
+            const scaleY = (bodyRect.height * 0.9) / (imageRect.height / modalZoom);
+            const fitScale = Math.min(scaleX, scaleY, 1);
+            updateModalZoom(fitScale);
+        }
+
+        // Mouse wheel zoom
+        modalBody.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.2 : 0.2;
+            updateModalZoom(modalZoom + delta);
+        });
+
+        // Drag functionality
+        let isDragging = false;
+        let startX, startY, scrollLeft, scrollTop;
+
+        modalImage.addEventListener('mousedown', (e) => {
+            if (modalZoom > 1) {
+                isDragging = true;
+                modalImage.style.cursor = 'grabbing';
+                startX = e.pageX - modalBody.offsetLeft;
+                startY = e.pageY - modalBody.offsetTop;
+                scrollLeft = modalBody.scrollLeft;
+                scrollTop = modalBody.scrollTop;
+                e.preventDefault();
+            }
+        });
+
+        modalBody.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            const x = e.pageX - modalBody.offsetLeft;
+            const y = e.pageY - modalBody.offsetTop;
+            const walkX = (x - startX) * 2;
+            const walkY = (y - startY) * 2;
+            modalBody.scrollLeft = scrollLeft - walkX;
+            modalBody.scrollTop = scrollTop - walkY;
+        });
+
+        modalBody.addEventListener('mouseup', () => {
+            isDragging = false;
+            modalImage.style.cursor = modalZoom > 1 ? 'grab' : 'default';
+        });
+
+        modalBody.addEventListener('mouseleave', () => {
+            isDragging = false;
+            modalImage.style.cursor = modalZoom > 1 ? 'grab' : 'default';
+        });
+
+        // Close functionality
+        const closeBtn = modal.querySelector('.flow-modal-close');
+        const closeModal = () => {
+            modal.classList.remove('show');
+            setTimeout(() => modal.remove(), 300);
+        };
+
+        closeBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Keyboard shortcuts
+        const handleKeydown = (e) => {
+            switch (e.key) {
+                case 'Escape':
+                    closeModal();
+                    break;
+                case '+':
+                case '=':
+                    e.preventDefault();
+                    updateModalZoom(modalZoom + 0.2);
+                    break;
+                case '-':
+                    e.preventDefault();
+                    updateModalZoom(modalZoom - 0.2);
+                    break;
+                case '0':
+                    e.preventDefault();
+                    updateModalZoom(1);
+                    break;
+                case 'f':
+                case 'F':
+                    e.preventDefault();
+                    fitToWindow();
+                    break;
+            }
+        };
+
+        document.addEventListener('keydown', handleKeydown);
+
+        // Clean up event listeners
+        modal.addEventListener('remove', () => {
+            document.removeEventListener('keydown', handleKeydown);
+        });
+
+        // Show animation and initialization
+        requestAnimationFrame(() => {
+            modal.classList.add('show');
+            // Auto-fit window after image loads
+            modalImage.addEventListener('load', () => {
+                setTimeout(fitToWindow, 100);
+            });
+            if (modalImage.complete) {
+                setTimeout(fitToWindow, 100);
+            }
+        });
     }
 
     function formatQuestionType(type) {
@@ -261,11 +557,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Error Handling
     function showError(message) {
-        const alert = document.createElement('div');
-        alert.className = 'error-alert';
-        alert.textContent = message;
-        document.body.appendChild(alert);
-        setTimeout(() => alert.remove(), 5000);
+        if (window.toast) {
+            window.toast.error(message);
+        } else {
+            // Fallback for legacy support
+            const alert = document.createElement('div');
+            alert.className = 'error-alert';
+            alert.textContent = message;
+            document.body.appendChild(alert);
+            setTimeout(() => alert.remove(), 5000);
+        }
     }
 
     // Event Listeners
@@ -277,9 +578,19 @@ document.addEventListener('DOMContentLoaded', function () {
         item.addEventListener('click', () => selectFile(item.dataset.filename));
     });
 
+    // Helper function to determine processing mode based on file extension
+    function getProcessingMode(filename) {
+        const extension = filename.toLowerCase().split('.').pop();
+        // PDF files use multimodal processing, others use text processing
+        return extension === 'pdf' ? 'multimodal' : 'text';
+    }
+
     // Process Button Handler
     processButton.addEventListener('click', () => {
         if (!currentSelectedFile) return;
+
+        // Automatically determine mode based on file type
+        const mode = getProcessingMode(currentSelectedFile);
 
         const originalText = processButton.innerHTML;
         processButton.disabled = true;
@@ -288,8 +599,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         fetch('/process', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({filename: currentSelectedFile})
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename: currentSelectedFile, mode: mode })
         })
             .then(response => response.json())
             .then(data => {
@@ -327,7 +638,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         fetch('/calibration', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 enable: enable,
                 filename: currentSelectedFile
@@ -349,7 +660,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function sendFewShotExamples() {
         fetch('/few-shot', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(fewShotExamples)
         })
             .then(response => {

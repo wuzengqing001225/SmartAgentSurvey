@@ -7,11 +7,18 @@ function closeSettingsModal() {
 }
 
 function showMessage(message, alertClass) {
-    const alert = document.createElement('div');
-    alert.className = alertClass;
-    alert.textContent = message;
-    document.body.appendChild(alert);
-    setTimeout(() => alert.remove(), 3000);
+    if (window.toast) {
+        const type = alertClass.includes('success') ? 'success' :
+                    alertClass.includes('error') ? 'error' : 'info';
+        window.toast.show(message, type);
+    } else {
+        // Fallback for legacy support
+        const alert = document.createElement('div');
+        alert.className = alertClass;
+        alert.textContent = message;
+        document.body.appendChild(alert);
+        setTimeout(() => alert.remove(), 3000);
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {

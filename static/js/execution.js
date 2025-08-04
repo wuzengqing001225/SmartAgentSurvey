@@ -5,6 +5,7 @@ let completedExecutions = new Set();
 let executionFinished = false;
 
 document.addEventListener('DOMContentLoaded', function () {
+    const estimatedCostElem = document.getElementById('estimatedCost');
     const startButton = document.getElementById('startExecution');
     const stopButton = document.getElementById('stopExecution');
     const stopModal = document.getElementById('stopModal');
@@ -54,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function () {
         stopMessage.textContent = 'Stopping execution...';
 
 
-        fetch('/api/execution/stop', {method: 'POST'})
+        fetch('/api/execution/stop', { method: 'POST' })
             .then(response => response.json())
             .then(data => {
                 if (!data.success) {
@@ -86,7 +87,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                    in this if statement we know that the last execution has been completed for sure. So we should add it to the set
                                    and reload the results display accordingly.
                                 * */
-                                if(!completedExecutions.has(currentExecutionNum)) {
+                                if (!completedExecutions.has(currentExecutionNum)) {
                                     completedExecutions.add(currentExecutionNum)
                                     showResults()
                                 }
@@ -127,6 +128,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const progressBar = document.querySelector('.progress-bar-fill');
         const progressText = document.querySelector('.progress-text');
 
+
         completedExecutions.clear()
         progressIndicator.style.display = 'block';
         resultsSection.style.display = 'none';
@@ -135,8 +137,16 @@ document.addEventListener('DOMContentLoaded', function () {
         currentExecutionNum = 1;
         document.getElementById('currentExecution').textContent = '1'
 
+        // Determine multi_modal based on current file's processing mode
+        // This will be handled by the backend based on stored processing mode
+        const requestBody = {};
+
         fetch('/api/execution/start', {
-            method: 'POST'
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
         })
             .then(response => response.json())
             .then(data => {
@@ -253,9 +263,13 @@ window.downloadSampleSpace = function () {
 
 
 function showError(message) {
-    const alert = document.createElement('div');
-    alert.className = 'error-alert';
-    alert.textContent = message;
-    document.body.appendChild(alert);
-    setTimeout(() => alert.remove(), 3000);
+    if (window.toast) {
+        window.toast.error(message);
+    } else {
+        const alert = document.createElement('div');
+        alert.className = 'error-alert';
+        alert.textContent = message;
+        document.body.appendChild(alert);
+        setTimeout(() => alert.remove(), 3000);
+    }
 }
