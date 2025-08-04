@@ -14,7 +14,16 @@ if __name__ == "__main__":
     # I. Survey preprocessing
     # I-a. Preprocessing
     if json_processing.get_json_nested_value(config, "debug_switch.preprocess"):
-        processed_data, question_segments, is_dag = Module.PreprocessingModule.flow.preprocess_survey_multimodal(config_set, json_processing.get_json_nested_value(config, "user_preference.survey_path"))
+        # Determine processing mode based on file extension
+        survey_path = json_processing.get_json_nested_value(config, "user_preference.survey_path")
+        file_extension = survey_path.lower().split('.')[-1] if '.' in survey_path else ''
+
+        if file_extension == 'pdf':
+            # PDF files use multimodal processing
+            processed_data, question_segments, is_dag = Module.PreprocessingModule.flow.preprocess_survey_multimodal(config_set, survey_path)
+        else:
+            # Other files use text processing
+            processed_data, question_segments, is_dag = Module.PreprocessingModule.flow.preprocess_survey(config_set, survey_path)
     else: processed_data, question_segments, is_dag = load('preprocess', config)
 
     # I-b. DAG check

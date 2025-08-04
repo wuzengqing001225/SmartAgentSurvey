@@ -1,3 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <path fill="#007AFF" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13v4H8l4 4 4-4h-3V7h-2z" opacity="0.9"/>
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="uploadGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Cloud background -->
+  <path d="M48 28c0-8.837-7.163-16-16-16s-16 7.163-16 16c0 1.333.167 2.625.479 3.854C11.833 33.146 8 37.604 8 43c0 6.627 5.373 12 12 12h28c6.627 0 12-5.373 12-12 0-5.396-3.833-9.854-8.479-11.146C51.833 30.625 52 29.333 52 28z" fill="url(#uploadGradient)" opacity="0.1"/>
+
+  <!-- Upload arrow -->
+  <path d="M32 20v24M24 28l8-8 8 8" stroke="url(#uploadGradient)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Base line -->
+  <path d="M20 48h24" stroke="url(#uploadGradient)" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Decorative dots -->
+  <circle cx="16" cy="20" r="2" fill="url(#uploadGradient)" opacity="0.3"/>
+  <circle cx="48" cy="24" r="1.5" fill="url(#uploadGradient)" opacity="0.4"/>
+  <circle cx="52" cy="36" r="1" fill="url(#uploadGradient)" opacity="0.5"/>
 </svg>

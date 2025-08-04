@@ -53,7 +53,7 @@ app = Flask(__name__)
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 UPLOAD_FOLDER = 'Data/UserUpload'
-ALLOWED_EXTENSIONS = {'doc', 'docx', 'pdf', 'txt', 'md', 'markdown'}
+ALLOWED_EXTENSIONS = {'doc', 'docx', 'pdf', 'txt', 'md'}
 PROCESS_STATUS_FILE = 'Data/process_status.json'
 CONFIG_FILE = 'Config/config.json'
 TEMP_FOLDER = 'static/temp'
@@ -178,8 +178,18 @@ def process_file():
         return jsonify({'error': 'Invalid request data'}), 400
 
     filename = data.get('filename')
-    # Always use multimodal mode
-    mode = 'multimodal'
+    # Get mode from request, or determine based on file extension
+    mode = data.get('mode', 'text')
+
+    # Helper function to determine processing mode based on file extension
+    def get_processing_mode(filename):
+        extension = filename.lower().split('.')[-1] if '.' in filename else ''
+        # PDF files use multimodal processing, others use text processing
+        return 'multimodal' if extension == 'pdf' else 'text'
+
+    # If mode not explicitly provided, determine from file extension
+    if 'mode' not in data:
+        mode = get_processing_mode(filename)
     if not filename or not os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], filename)):
         return jsonify({'error': 'Invalid filename'}), 400
 
@@ -191,19 +201,32 @@ def process_file():
         status_dict[filename] = 'preprocessing'
         save_process_status(status_dict)
 
-        # Update config with new file path
+        # Update config with new file path and processing mode
         update_config(filename)
+
+        # Store the processing mode in config for later use in execution
+        config_set = config_manager.get_config_set()
+        config = config_set[0]
+        config['user_preference']['current_processing_mode'] = mode
+        with open(CONFIG_FILE, 'w') as f:
+            json.dump(config, f, indent=4)
 
         # Load config and process survey
         config_set = config_manager.get_config_set()
         config = config_set[0]
 
-        # Always use multimodal preprocessing
+        # Choose preprocessing flow based on mode
         if json_processing.get_json_nested_value(config, "debug_switch.preprocess"):
-            # Multimodal mode: use file input for LLM, extract questions and image descriptions
-            processed_data, question_segments, is_dag = Module.PreprocessingModule.flow.preprocess_survey_multimodal(
-                config_set,
-                json_processing.get_json_nested_value(config, "user_preference.survey_path"))
+            if mode == 'multimodal':
+                # Multimodal mode: use file input for LLM, extract questions and image descriptions
+                processed_data, question_segments, is_dag = Module.PreprocessingModule.flow.preprocess_survey_multimodal(
+                    config_set,
+                    json_processing.get_json_nested_value(config, "user_preference.survey_path"))
+            else:
+                # Text mode: use original text-based preprocessing
+                processed_data, question_segments, is_dag = Module.PreprocessingModule.flow.preprocess_survey(
+                    config_set,
+                    json_processing.get_json_nested_value(config, "user_preference.survey_path"))
         else:
             processed_data, question_segments, is_dag = load('preprocess', config)
 
@@ -684,7 +707,13 @@ def get_execution_metrics():
 @app.route('/api/execution/start', methods=['POST'])
 def start_execution():
     try:
-        multi_modal = request.json.get('multi_modal', True)
+        # Get multi_modal setting from request or determine from stored processing mode
+        config_set = config_manager.get_config_set()
+        config = config_set[0]
+        stored_mode = config.get('user_preference', {}).get('current_processing_mode', 'text')
+
+        # Use multimodal execution if the file was processed in multimodal mode
+        multi_modal = request.json.get('multi_modal', stored_mode == 'multimodal')
 
         config_set = config_manager.get_config_set()
         config = config_set[0]

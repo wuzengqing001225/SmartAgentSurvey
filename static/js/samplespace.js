@@ -589,19 +589,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Notifications
     function showError(message) {
-        const alert = document.createElement('div');
-        alert.className = 'error-alert';
-        alert.textContent = message;
-        document.body.appendChild(alert);
-        setTimeout(() => alert.remove(), 3000);
+        if (window.toast) {
+            window.toast.error(message);
+        } else {
+            const alert = document.createElement('div');
+            alert.className = 'error-alert';
+            alert.textContent = message;
+            document.body.appendChild(alert);
+            setTimeout(() => alert.remove(), 3000);
+        }
     }
 
     function showSuccess(message) {
-        const alert = document.createElement('div');
-        alert.className = 'success-alert';
-        alert.textContent = message;
-        document.body.appendChild(alert);
-        setTimeout(() => alert.remove(), 3000);
+        if (window.toast) {
+            window.toast.success(message);
+        } else {
+            const alert = document.createElement('div');
+            alert.className = 'success-alert';
+            alert.textContent = message;
+            document.body.appendChild(alert);
+            setTimeout(() => alert.remove(), 3000);
+        }
     }
 
     // Navigation

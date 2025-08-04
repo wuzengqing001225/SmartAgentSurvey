@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sample Space Generation</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern-style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
@@ -45,15 +45,19 @@
                 <div class="method-selection-container">
                     <h2>Choose Sample Generation Method</h2>
                     <div class="method-options">
-                        <div class="method-card" onclick="selectMethod('upload')">
+                        <div class="method-card" onclick="selectMethod('upload')" tabindex="0" role="button"
+                            aria-label="Upload samples method"
+                            onkeydown="if(event.key==='Enter'||event.key===' '){selectMethod('upload')}">
                             <h3>Upload Samples</h3>
                             <p>Upload a text file with sample profiles</p>
-                            <div class="method-icon">📄</div>
+                            <div class="method-icon" aria-hidden="true">📄</div>
                         </div>
-                        <div class="method-card" id="generateCardIdThing" onclick="selectMethod('generate')">
+                        <div class="method-card" id="generateCardIdThing" onclick="selectMethod('generate')"
+                            tabindex="0" role="button" aria-label="Generate samples method"
+                            onkeydown="if(event.key==='Enter'||event.key===' '){selectMethod('generate')}">
                             <h3 id="header3text">Generate Samples</h3>
                             <p>Create and customize sample dimensions</p>
-                            <div class="method-icon">⚙️</div>
+                            <div class="method-icon" aria-hidden="true">⚙️</div>
                         </div>
                     </div>
                 </div>
@@ -70,8 +74,8 @@
                 </button>
                 <div class="sample-upload-area" id="sampleDropZone">
                     <div class="upload-message">
-                        <img src="{{ url_for('static', filename='images/upload-icon.svg') }}" alt="Upload"
-                            class="upload-icon">
+                        <img src="{{ url_for('static', filename='images/upload-icon.svg') }}" alt="" class="upload-icon"
+                            aria-hidden="true">
                         <p>Drop your sample profiles file or click to upload</p>
                         <p class="supported-formats">Text file with one profile per line</p>
                     </div>

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Survey Upload System</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern-style.css') }}">
 </head>
 
 <body>
@@ -40,14 +40,19 @@
         <div class="main-content">
             <!-- Upload View -->
             <div id="uploadView" class="view active">
-                <div class="upload-area" id="dropZone">
+                <div class="upload-area" id="dropZone" tabindex="0" role="button" aria-label="Upload files"
+                    onkeydown="if(event.key==='Enter'||event.key===' '){document.getElementById('fileInput').click()}">
                     <div class="upload-message">
-                        <img src="{{ url_for('static', filename='images/upload-icon.svg') }}" alt="Upload"
-                            class="upload-icon">
+                        <img src="{{ url_for('static', filename='images/upload-icon.svg') }}" alt="" class="upload-icon"
+                            aria-hidden="true">
                         <p>Drop files here or click to upload</p>
                         <p class="supported-formats">Supported formats: DOCX, PDF, TXT, MD</p>
                     </div>
-                    <input type="file" id="fileInput" accept=".docx,.pdf,.txt,.md,.markdown" hidden>
+                    <input type="file" id="fileInput" accept=".docx,.pdf,.txt,.md" hidden
+                        aria-describedby="upload-description">
+                    <div id="upload-description" class="sr-only">
+                        Upload survey files in DOCX, PDF, TXT, or MD format
+                    </div>
                 </div>
 
                 <div id="selectedFileInfo" class="selected-file-info" style="display: none;">
