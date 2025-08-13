@@ -15,20 +15,29 @@ class SurveyFlowVisualizer:
         self._build_graph()
 
     def _build_graph(self):
+        # First, add all nodes that are explicitly in the survey data
         for question_id, data in self.survey_data.items():
             is_table = 'table_structure' in data
             self.graph.add_node(question_id,
                               type=data.get('type', ''),
                               is_table=is_table)
 
+        # Then, add edges only between existing nodes
+        for question_id, data in self.survey_data.items():
             jump_logic = data.get('jump_logic', {})
             if isinstance(jump_logic, dict):
                 if 'next' in jump_logic and jump_logic['next']:
-                    self.graph.add_edge(question_id, str(jump_logic['next']))
+                    next_id_str = str(jump_logic['next'])
+                    # Check if the target node exists in the survey data before adding an edge
+                    if next_id_str in self.survey_data:
+                        self.graph.add_edge(question_id, next_id_str)
                 else:
                     for condition, next_id in jump_logic.items():
                         if next_id and condition != 'next':
-                            self.graph.add_edge(question_id, str(next_id), condition=condition)
+                            next_id_str = str(next_id)
+                            # Check if the target node exists in the survey data before adding an edge
+                            if next_id_str in self.survey_data:
+                                self.graph.add_edge(question_id, next_id_str, condition=condition)
 
     def _find_sequence_groups(self) -> List[List[str]]:
         groups = []
