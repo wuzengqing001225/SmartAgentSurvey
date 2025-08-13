@@ -305,6 +305,32 @@ def delete_temp_file(filename):
     return jsonify({'error': 'File not found'}), 404
 
 
+@app.route('/delete/<path:filename>', methods=['DELETE'])
+def delete_file(filename):
+    """Delete a file from the upload folder and its status."""
+    try:
+        # Prevent directory traversal attacks
+        if '..' in filename or filename.startswith('/'):
+            return jsonify({'error': 'Invalid filename'}), 400
+
+        # Delete the file
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+        # Remove from process status
+        status_dict = load_process_status()
+        if filename in status_dict:
+            del status_dict[filename]
+            save_process_status(status_dict)
+
+        return jsonify({'success': True, 'message': f'{filename} deleted successfully'})
+
+    except Exception as e:
+        print(f"Error deleting file: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/few-shot', methods=['POST'])
 def handle_few_shot():
     """Adds few shot examples to processed survey by saving them to the processed_survey.json file."""

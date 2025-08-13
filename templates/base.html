@@ -103,6 +103,18 @@
         {% block content %}{% endblock %}
     </div>
 
+    <!-- Global Confirmation Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content confirm-modal-content">
+            <h3 id="confirmModalTitle">Are you sure?</h3>
+            <p id="confirmModalText">This action cannot be undone.</p>
+            <div class="confirm-modal-actions">
+                <button id="confirmModalCancel" class="btn secondary">Cancel</button>
+                <button id="confirmModalConfirm" class="btn primary danger">Confirm</button>
+            </div>
+        </div>
+    </div>
+
     <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
     <script src="{{ url_for('static', filename='js/modern-interactions.js') }}"></script>
     <script src="{{ url_for('static', filename='js/settings.js') }}"></script>

@@ -255,6 +255,36 @@ Enhanced Navbar with Glass Effect */
   transform: scaleY(1);
 }
 
+.history-item .delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: #f1f5f9;
+  color: #94a3b8;
+  font-size: 16px;
+  line-height: 24px;
+  text-align: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+  transform: scale(0.8);
+}
+
+.history-item:hover .delete-btn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.delete-btn:hover {
+  background: #ef4444;
+  color: white;
+  transform: scale(1.1) rotate(90deg) !important;
+}
+
 .history-item.active {
   background: var(--primary-light);
   border-color: var(--primary-color);
@@ -1989,6 +2019,40 @@ Enhanced Toast System */
   height: 3px;
   background: rgba(255, 255, 255, 0.3);
   animation: toastProgress 4s linear forwards;
+}
+
+/* Confirmation Modal Styles */
+.confirm-modal-content {
+  max-width: 450px;
+  text-align: center;
+  padding: 2rem;
+}
+
+#confirmModalTitle {
+  font-size: 1.5rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+#confirmModalText {
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.confirm-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.btn.danger {
+    background: #ef4444;
+}
+
+.btn.danger:hover {
+    background: #dc2626;
 }
 
 @keyframes toastProgress {

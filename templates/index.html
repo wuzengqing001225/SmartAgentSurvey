@@ -19,6 +19,7 @@
                 {% for item in history %}
                 <div class="history-item {% if item.status == 'DAG_ERROR' %}dag-error{% endif %}"
                     data-filename="{{ item.filename }}" data-status="{{ item.status }}">
+                    <button class="delete-btn" onclick="deleteFile('{{ item.filename }}', event)">&times;</button>
                     <div class="filename" title="{{ item.filename }}">{{ item.filename }}</div>
                     <div class="upload-time">{{ item.upload_time }}</div>
                     <div class="file-info">
