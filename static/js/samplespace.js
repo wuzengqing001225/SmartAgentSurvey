@@ -414,8 +414,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (data.is_upload) {
             const resultsContainer = document.getElementById('resultsView');
-            resultsContainer.style.display = 'flex';
-            resultsContainer.style.padding = 0;
+            resultsContainer.style.display = 'block';
+            resultsContainer.style.padding = '2rem';
             resultsContainer.innerHTML = `
                 <div class="results-header">
                     <div class="sample-count">
@@ -425,7 +425,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
                 <div class="execution-controls">
                     <div class="execution-button">
-                        <button class="btn secondary" onclick="${lastEntryMethod === 'upload' ? 'goBackToMethodSelection()' : 'goBackToDimensions()'}">Previous Step</button>
+                        <button class="btn secondary" onclick="goBackToMethodSelection()">Previous Step</button>
                     </div>
                     <div class="execution-button">
                         <button class="btn primary" onclick="downloadSampleSpace()">Download Profiles</button>
@@ -438,12 +438,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         <button class="btn primary" onclick="proceedToExecution()">Proceed to Execution</button>
                     </div>
                 </div>
-                <div class="container-upload" id="profilesContainerUpload"></div>
+                <div class="profiles-container" id="profilesContainerUpload"></div>
             `;
             const profilesContainer = document.getElementById('profilesContainerUpload');
             profilesContainer.innerHTML = data.samples.map((sample, index) => `
-                <div class="text-profile-upload">
-                    <span><strong>Profile ${index + 1}:</strong> ${sample}</span>
+                <div class="profile-card-upload">
+                    <p><strong>Profile ${index + 1}:</strong> ${sample}</p>
                 </div>
             `).join('');
         } else {
