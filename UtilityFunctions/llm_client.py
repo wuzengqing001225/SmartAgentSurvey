@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Union
 import anthropic
 import openai
 import base64
+import os
 class LLMClient:
     def __init__(self, config_path: str = "config.json", output_dir: str = './'):
         self.output_dir = output_dir
@@ -48,7 +49,7 @@ class LLMClient:
 
         if self.provider == "anthropic":
             if not self.base_url:
-                self.base_url = "https://api.anthropic.com/v1"
+                self.base_url = "https://api.anthropic.com"
             self.client = anthropic.Anthropic(api_key=self.api_key, base_url=self.base_url)
         elif self.provider == "openai":
             if not self.base_url:
@@ -109,38 +110,73 @@ class LLMClient:
 
         try:
             # upload the file to OpenAI
-            file = self.client.files.create(
-                file=open(file_path, "rb"),
-                purpose="user_data",
-            )
+            if self.provider == "openai":
+                file = self.client.files.create(
+                    file=open(file_path, "rb"),
+                    purpose="user_data",
+                )
 
-            messages = [
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "input_file",
-                                "file_id": file.id,
-                            },
-                            {
-                                "type": "input_text",
-                                "text": prompt,
-                            },
-                        ],
-                    },
-                ]
+                messages = [
+                        {
+                            "role": "user",
+                            "content": [
+                                {
+                                    "type": "input_file",
+                                    "file_id": file.id,
+                                },
+                                {
+                                    "type": "input_text",
+                                    "text": prompt,
+                                },
+                            ],
+                        },
+                    ]
 
-            if system_prompt:
-                messages.insert(0, {"role": "user", "content": system_prompt})
+                if system_prompt:
+                    messages.insert(0, {"role": "user", "content": system_prompt})
 
-            # Call the OpenAI multimodal API
-            response = self.client.responses.create(
-                model=self.model,
-                input=messages
-            )
+                # Call the OpenAI multimodal API
+                response = self.client.responses.create(
+                    model=self.model,
+                    input=messages
+                )
 
-            self.logger.info(f"Multimodal response: {response.output_text}")
-            return response.output_text
+                self.logger.info("Successfully generated multimodal response...")
+
+                return response.output_text
+            else:
+                 with open(file_path, "rb") as f:
+                    file=self.client.beta.files.upload(file=(os.path.basename(f.name), f, "application/pdf"))
+
+                 messages = [
+                        {
+                            "role": "user",
+                            "content": [
+                                {
+                                    "type": "document",
+                                    "source": {
+                                        "type": "file",
+                                        "file_id": file.id
+                                    }
+                                },
+                                {
+                                    "type": "text",
+                                    "text": prompt,
+                                },
+                            ],
+                        },
+                    ]
+
+                 if system_prompt:
+                    messages.insert(0, {"role": "user", "content": system_prompt})
+
+                 response = self.client.beta.messages.create(
+                    betas=["files-api-2025-04-14"],
+                    model=self.model,
+                    max_tokens=self.max_tokens,
+                    messages=messages,)
+                 self.logger.info("Successfully generated multimodal response...")
+                 return response.content[0].text
 
         except Exception as e:
             self.logger.error(f"Error in multimodal processing: {str(e)}")

@@ -9,7 +9,7 @@ function closeSettingsModal() {
 function showMessage(message, alertClass) {
     if (window.toast) {
         const type = alertClass.includes('success') ? 'success' :
-                    alertClass.includes('error') ? 'error' : 'info';
+            alertClass.includes('error') ? 'error' : 'info';
         window.toast.show(message, type);
     } else {
         // Fallback for legacy support
@@ -21,7 +21,7 @@ function showMessage(message, alertClass) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const providerSelect = document.getElementById('provider');
     const baseUrlInput = document.getElementById('base_url');
     const settingsModalInput = document.getElementById('sample_size');
@@ -29,10 +29,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const defaultBaseUrls = {
         openai: 'https://api.openai.com/v1',
-        anthropic: 'https://api.anthropic.com/v1'
+        anthropic: 'https://api.anthropic.com'
     };
 
-    document.getElementById('settingsModal').addEventListener('click', function(e) {
+    document.getElementById('settingsModal').addEventListener('click', function (e) {
         if (e.target === this) {
             closeSettingsModal();
         }
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
             providerSelect.value = data.llm_settings.provider;
             document.getElementById('api_key').value = data.llm_settings.api_key;
             document.getElementById('model').value = data.llm_settings.model;
-            
+
             // Set base_url: use saved value, otherwise use default for the provider
             baseUrlInput.value = data.llm_settings.base_url || defaultBaseUrls[data.llm_settings.provider] || '';
 
@@ -61,15 +61,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-    providerSelect.addEventListener('change', function() {
+    providerSelect.addEventListener('change', function () {
         baseUrlInput.value = defaultBaseUrls[this.value] || '';
     });
 
-    document.getElementById('temperature').addEventListener('input', function(e) {
+    document.getElementById('temperature').addEventListener('input', function (e) {
         document.getElementById('temperatureValue').textContent = e.target.value;
     });
 
-    document.getElementById('settingsForm').addEventListener('submit', function(e) {
+    document.getElementById('settingsForm').addEventListener('submit', function (e) {
         e.preventDefault();
 
         let sampleSize = parseInt(settingsModalInput.value);
@@ -105,21 +105,21 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: JSON.stringify(formData)
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showMessage('Config saved successfully', 'success-alert');
-                if (sampleSizeInput) {
-                    sampleSizeInput.value = sampleSize;
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('Config saved successfully', 'success-alert');
+                    if (sampleSizeInput) {
+                        sampleSizeInput.value = sampleSize;
+                    }
+                    closeSettingsModal();
+                } else {
+                    showMessage(data.error || 'Failed to save settings', 'error-alert');
                 }
-                closeSettingsModal();
-            } else {
-                showMessage(data.error || 'Failed to save settings', 'error-alert');
-            }
-        })
-        .catch(error => {
-            showMessage('Error saving settings', 'error-alert');
-        });
+            })
+            .catch(error => {
+                showMessage('Error saving settings', 'error-alert');
+            });
     });
 
     settingsModalInput.addEventListener('input', function () {
