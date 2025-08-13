@@ -1,0 +1,222 @@
+{
+  "claude_api_mapping": {
+    "description": "Claude model name to API compatible name mapping rules",
+    "patterns": {
+      "haiku_3_5": {
+        "patterns": [
+          "claude.*haiku.*3\\.5",
+          "claude.*3\\.5.*haiku",
+          "haiku.*3\\.5",
+          "3\\.5.*haiku"
+        ],
+        "api_model": "claude-3-5-haiku-20241022"
+      },
+      "haiku_3": {
+        "patterns": [
+          "claude.*haiku.*3(?:\\.0)?(?!\\.5)",
+          "claude.*3(?:\\.0)?.*haiku(?!.*3\\.5)",
+          "haiku.*3(?:\\.0)?(?!\\.5)",
+          "3(?:\\.0)?.*haiku(?!.*3\\.5)"
+        ],
+        "api_model": "claude-3-haiku-20240307"
+      },
+      "sonnet_4": {
+        "patterns": [
+          "claude.*sonnet.*4(?:\\.0)?",
+          "claude.*4(?:\\.0)?.*sonnet",
+          "sonnet.*4(?:\\.0)?",
+          "4(?:\\.0)?.*sonnet"
+        ],
+        "api_model": "claude-3-5-sonnet-20241022"
+      },
+      "sonnet_3_7": {
+        "patterns": [
+          "claude.*sonnet.*3\\.7",
+          "claude.*3\\.7.*sonnet",
+          "sonnet.*3\\.7",
+          "3\\.7.*sonnet"
+        ],
+        "api_model": "claude-3-5-sonnet-20241022"
+      },
+      "sonnet_3_5": {
+        "patterns": [
+          "claude.*sonnet.*3\\.5",
+          "claude.*3\\.5.*sonnet",
+          "sonnet.*3\\.5",
+          "3\\.5.*sonnet"
+        ],
+        "api_model": "claude-3-5-sonnet-20241022"
+      },
+      "sonnet_3": {
+        "patterns": [
+          "claude.*sonnet.*3(?:\\.0)?(?!\\.5|\\.7)",
+          "claude.*3(?:\\.0)?.*sonnet(?!.*3\\.5|.*3\\.7)",
+          "sonnet.*3(?:\\.0)?(?!\\.5|\\.7)",
+          "3(?:\\.0)?.*sonnet(?!.*3\\.5|.*3\\.7)"
+        ],
+        "api_model": "claude-3-sonnet-20240229"
+      },
+      "opus_4_1": {
+        "patterns": [
+          "claude.*opus.*4\\.1",
+          "claude.*4\\.1.*opus",
+          "opus.*4\\.1",
+          "4\\.1.*opus"
+        ],
+        "api_model": "claude-3-opus-20240229"
+      },
+      "opus_4": {
+        "patterns": [
+          "claude.*opus.*4(?:\\.0)?(?!\\.1)",
+          "claude.*4(?:\\.0)?.*opus(?!\\.1)",
+          "opus.*4(?:\\.0)?(?!\\.1)",
+          "4(?:\\.0)?.*opus(?!\\.1)"
+        ],
+        "api_model": "claude-3-opus-20240229"
+      },
+      "opus_3": {
+        "patterns": [
+          "claude.*opus.*3(?:\\.0)?",
+          "claude.*3(?:\\.0)?.*opus",
+          "opus.*3(?:\\.0)?",
+          "3(?:\\.0)?.*opus"
+        ],
+        "api_model": "claude-3-opus-20240229"
+      },
+      "generic_haiku": {
+        "patterns": [
+          "haiku"
+        ],
+        "api_model": "claude-3-5-haiku-20241022"
+      },
+      "generic_sonnet": {
+        "patterns": [
+          "sonnet"
+        ],
+        "api_model": "claude-3-5-sonnet-20241022"
+      },
+      "generic_opus": {
+        "patterns": [
+          "opus"
+        ],
+        "api_model": "claude-3-opus-20240229"
+      }
+    },
+    "default_model": "claude-3-5-sonnet-20241022",
+    "api_model_pattern": "claude-\\d+-\\w+-\\d{8}"
+  },
+  "openai_encoding_mapping": {
+    "description": "OpenAI model to tiktoken encoding mapping rules",
+    "encodings": {
+      "o200k_base": {
+        "patterns": [
+          "gpt-4o",
+          "gpt-5",
+          "o1",
+          "o3",
+          "o4"
+        ],
+        "description": "Encoding used by latest models"
+      },
+      "cl100k_base": {
+        "patterns": [
+          "gpt-4(?!o)",
+          "gpt-3\\.5",
+          "text-embedding"
+        ],
+        "description": "Encoding used by GPT-4 series and GPT-3.5"
+      },
+      "p50k_base": {
+        "patterns": [
+          "codex",
+          "text-davinci-002",
+          "text-davinci-003"
+        ],
+        "description": "Encoding used by Codex and early models"
+      },
+      "r50k_base": {
+        "patterns": [
+          "davinci(?!-002|-003)",
+          "curie",
+          "babbage",
+          "ada"
+        ],
+        "description": "Encoding used by GPT-3 base models"
+      }
+    },
+    "default_encoding": "cl100k_base"
+  },
+  "openai_message_overhead": {
+    "description": "OpenAI model message token overhead configuration",
+    "specific_models": {
+      "gpt-3.5-turbo-0125": {
+        "tokens_per_message": 3,
+        "tokens_per_name": 1
+      },
+      "gpt-4-0314": {
+        "tokens_per_message": 3,
+        "tokens_per_name": 1
+      },
+      "gpt-4-32k-0314": {
+        "tokens_per_message": 3,
+        "tokens_per_name": 1
+      },
+      "gpt-4-0613": {
+        "tokens_per_message": 3,
+        "tokens_per_name": 1
+      },
+      "gpt-4-32k-0613": {
+        "tokens_per_message": 3,
+        "tokens_per_name": 1
+      },
+      "gpt-4o-mini-2024-07-18": {
+        "tokens_per_message": 3,
+        "tokens_per_name": 1
+      },
+      "gpt-4o-2024-08-06": {
+        "tokens_per_message": 3,
+        "tokens_per_name": 1
+      }
+    },
+    "model_families": {
+      "gpt-3.5-turbo": {
+        "tokens_per_message": 3,
+        "tokens_per_name": 1
+      },
+      "gpt-4": {
+        "tokens_per_message": 3,
+        "tokens_per_name": 1
+      },
+      "gpt-5": {
+        "tokens_per_message": 3,
+        "tokens_per_name": 1
+      },
+      "o1": {
+        "tokens_per_message": 3,
+        "tokens_per_name": 1
+      },
+      "o3": {
+        "tokens_per_message": 3,
+        "tokens_per_name": 1
+      },
+      "o4": {
+        "tokens_per_message": 3,
+        "tokens_per_name": 1
+      }
+    },
+    "default_overhead": {
+      "tokens_per_message": 3,
+      "tokens_per_name": 1
+    }
+  },
+  "version_info": {
+    "last_updated": "2025-01-13",
+    "description": "Model mapping rules configuration file, supports intelligent model name matching and version compatibility",
+    "notes": [
+      "Uses regular expressions for pattern matching",
+      "Supports various naming formats and case variations",
+      "Provides fallback mechanism to ensure compatibility",
+      "New model support can be added by modifying this file"
+    ]
+  }
+}
