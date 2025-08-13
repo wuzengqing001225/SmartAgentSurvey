@@ -23,11 +23,13 @@ class ConfigManager:
         self._current_config = None
         self._current_config_set = None
         self._current_filename = None
+        self._current_processing_mode = 'text'  # Default to 'text'
 
     def set_current_file(self, filename):
         self._current_filename = filename
         self._current_config = None  # Clear cached config
         self._current_config_set = None
+        self._current_processing_mode = 'text' # Reset on new file
 
     def get_config_set(self):
         if self._current_config_set is None:
@@ -40,10 +42,17 @@ class ConfigManager:
     def update_sample_size(self, new_sample_size):
         self._current_config_set[0]['user_preference']['sample']['sample_size'] = new_sample_size
 
+    def set_processing_mode(self, mode):
+        self._current_processing_mode = mode
+
+    def get_processing_mode(self):
+        return self._current_processing_mode
+
     def clear(self):
         self._current_config = None
         self._current_config_set = None
         self._current_filename = None
+        self._current_processing_mode = 'text'
 
 
 config_manager = ConfigManager()
@@ -201,15 +210,9 @@ def process_file():
         status_dict[filename] = 'preprocessing'
         save_process_status(status_dict)
 
-        # Update config with new file path and processing mode
+        # Update config with new file path and store processing mode in memory
         update_config(filename)
-
-        # Store the processing mode in config for later use in execution
-        config_set = config_manager.get_config_set()
-        config = config_set[0]
-        config['user_preference']['current_processing_mode'] = mode
-        with open(CONFIG_FILE, 'w') as f:
-            json.dump(config, f, indent=4)
+        config_manager.set_processing_mode(mode)
 
         # Load config and process survey
         config_set = config_manager.get_config_set()
@@ -758,12 +761,8 @@ def get_execution_metrics():
 @app.route('/api/execution/start', methods=['POST'])
 def start_execution():
     try:
-        # Get multi_modal setting from request or determine from stored processing mode
-        config_set = config_manager.get_config_set()
-        config = config_set[0]
-        stored_mode = config.get('user_preference', {}).get('current_processing_mode', 'text')
-
-        # Use multimodal execution if the file was processed in multimodal mode
+        # Get multi_modal setting from the in-memory config manager
+        stored_mode = config_manager.get_processing_mode()
         multi_modal = request.json.get('multi_modal', stored_mode == 'multimodal')
 
         config_set = config_manager.get_config_set()

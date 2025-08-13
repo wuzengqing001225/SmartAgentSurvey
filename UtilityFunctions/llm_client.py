@@ -39,6 +39,7 @@ class LLMClient:
         self.provider = llm_settings.get("provider", "anthropic").lower()
         self.api_key = llm_settings.get("api_key")
         self.model = llm_settings.get("model", "gpt-4o-mini")
+        self.base_url = llm_settings.get("base_url")
         self.max_tokens = llm_settings.get("max_tokens", 256)
         self.temperature = llm_settings.get("temperature", 0.0)
 
@@ -46,9 +47,13 @@ class LLMClient:
             raise ValueError("API key not found in config")
 
         if self.provider == "anthropic":
-            self.client = anthropic.Anthropic(api_key=self.api_key)
+            if not self.base_url:
+                self.base_url = "https://api.anthropic.com/v1"
+            self.client = anthropic.Anthropic(api_key=self.api_key, base_url=self.base_url)
         elif self.provider == "openai":
-            self.client = openai.OpenAI(api_key=self.api_key)
+            if not self.base_url:
+                self.base_url = "https://api.openai.com/v1"
+            self.client = openai.OpenAI(api_key=self.api_key, base_url=self.base_url)
         else:
             raise ValueError(f"Unsupported provider: {self.provider}")
 
