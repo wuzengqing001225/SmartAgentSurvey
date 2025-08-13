@@ -3346,3 +3346,137 @@ hanced Flow Diagram Styles */
   font-size: 0.7rem;
   margin-right: 0.25rem;
 }
+
+/*
+ 🎯 Results Section Enhancements */
+.results-section {
+  margin-top: 3rem;
+  padding: 2rem;
+  background: var(--background-secondary);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+}
+
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: var(--background-primary);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+.results-header h2 {
+  font-size: 1.5rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin: 0;
+  flex: 1;
+  text-align: center;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.nav-arrow {
+  width: 48px;
+  height: 48px;
+  border: 2px solid var(--border-color);
+  background: var(--background-secondary);
+  color: var(--text-primary);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.25rem;
+  font-weight: var(--font-weight-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-arrow::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--primary-gradient);
+  opacity: 0;
+  transition: var(--transition-fast);
+}
+
+.nav-arrow:hover {
+  border-color: var(--primary-color);
+  transform: scale(1.1);
+  box-shadow: var(--shadow-md);
+}
+
+.nav-arrow:hover::before {
+  opacity: 0.1;
+}
+
+.nav-arrow:active {
+  transform: scale(0.95);
+}
+
+.nav-arrow:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+  border-color: var(--border-color);
+}
+
+.nav-arrow:disabled:hover::before {
+  opacity: 0;
+}
+
+.download-options {
+  display: flex;
+  justify-content: space-around;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.download-group {
+  text-align: center;
+  padding: 1.5rem;
+  background: var(--background-primary);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  flex: 1;
+  min-width: 250px;
+}
+
+.download-group h3 {
+  font-size: 1.125rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.download-group h3::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 2px;
+  background: var(--primary-gradient);
+  border-radius: 1px;
+}
+
+.download-group .btn {
+  margin: 0.5rem;
+  min-width: 140px;
+}
