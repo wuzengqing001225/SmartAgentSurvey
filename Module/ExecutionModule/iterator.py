@@ -104,7 +104,7 @@ def questionnaire_iterator_segment(config_set, processed_data, question_segments
                 logger.error(f"Question not found.")
 
             profile_part = f"You act as a survey participant with the following profile: {sample_profile}\n"
-            format_part = """The output format should be in JSON, with each value structured as "question number: answer". Do not place ```json at the beginning. If you are asked to reason before/after answering a question, please put your reason and answer to the question in nested keys, like this: "question number: { 'reason': XXX, 'answer': XXX }". But if you are not asked to give a reason, just put the answer in the value of the question number key and do not give the reason. Please obey the rule strictly and do not use any other format."""
+            format_part = """CRITICAL: Your response must contain ONLY valid JSON format, nothing else. Do not include any explanations, reasoning, or additional text before or after the JSON. The output format should be in JSON, with each value structured as "question number": answer. Do not place ```json at the beginning or end. If you are asked to reason before/after answering a question, please put your reason and answer to the question in nested keys, like this: "question number": { "reason": "XXX", "answer": "XXX" }. But if you are not asked to give a reason, just put the answer in the value of the question number key and do not give the reason. Start your response directly with { and end with }. No other text is allowed."""
             if multi_modal:
                 answer_text = llm_client.generate_multimodal(
                     json_processing.get_json_nested_value(config, "user_preference.survey_path"),
@@ -121,6 +121,9 @@ def questionnaire_iterator_segment(config_set, processed_data, question_segments
                 answer_dict = json.loads(answer_text)
             except json.JSONDecodeError as e:
                 logger.error(f"Invalid JSON format: {e}")
+                logger.error(f"Raw response: {answer_text}")
+                errors[agent_id + 1].append(f"JSON parsing error at segment starting with question {current_question}: {str(e)}")
+                answer_dict = {}
 
             answer = merge_dicts_in_lexicographical_order(answer, answer_dict)
 
@@ -168,7 +171,7 @@ def questionnaire_iterator(config_set, processed_data, execution_order, sample_s
         questions = format_full_question(processed_data, json_processing.get_json_nested_value(config, "llm_settings.max_tokens"))[0]
 
         profile_part = f"You act as a survey participant with the following profile: {sample_profile}\n"
-        format_part = """The output format should be in JSON, with each value structured as "question number: answer". Do not place ```json at the beginning. If you are asked to reason before/after answering a question, please put your reason and answer to the question in nested keys, like this: "question number: { 'reason': XXX, 'answer': XXX }". But if you are not asked to give a reason, just put the answer in the value of the question number key and do not give the reason. Please obey the rule strictly and do not use any other format."""
+        format_part = """CRITICAL: Your response must contain ONLY valid JSON format, nothing else. Do not include any explanations, reasoning, or additional text before or after the JSON. The output format should be in JSON, with each value structured as "question number": answer. Do not place ```json at the beginning or end. If you are asked to reason before/after answering a question, please put your reason and answer to the question in nested keys, like this: "question number": { "reason": "XXX", "answer": "XXX" }. But if you are not asked to give a reason, just put the answer in the value of the question number key and do not give the reason. Start your response directly with { and end with }. No other text is allowed."""
         if multi_modal:
             answer_text = llm_client.generate_multimodal(
                 json_processing.get_json_nested_value(config, "user_preference.survey_path"),
@@ -184,6 +187,8 @@ def questionnaire_iterator(config_set, processed_data, execution_order, sample_s
             answer_dict = json.loads(answer_text)
         except json.JSONDecodeError as e:
             logger.error(f"Invalid JSON format: {e}")
+            logger.error(f"Raw response: {answer_text}")
+            errors[agent_id + 1].append(f"JSON parsing error: {str(e)}")
             answer_dict = {}
 
         answers = merge_dicts_in_lexicographical_order(answers, {agent_id + 1: answer_dict})
