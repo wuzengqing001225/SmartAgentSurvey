@@ -10,6 +10,7 @@
             {% for item in history %}
             <div class="history-item {% if item.status == 'DAG_ERROR' %}dag-error{% endif %}"
                 data-filename="{{ item.filename }}" data-status="{{ item.status }}">
+                <button class="delete-btn" onclick="deleteFile('{{ item.filename }}', event)">&times;</button>
                 <div class="filename">{{ item.filename }}</div>
                 <div class="upload-time">{{ item.upload_time }}</div>
                 <div class="file-info">
@@ -64,11 +65,11 @@
         </div>
 
         <div id="resultsSection" class="results-section" style="display: none;">
-            <h2>
+            <div class="results-header">
                 <button id="prevExecution" class="nav-arrow">&lt;</button>
-                <span id="executionTitle">Execution Results</span>
+                <h2 id="executionTitle">Execution Results</h2>
                 <button id="nextExecution" class="nav-arrow">&gt;</button>
-            </h2>
+            </div>
             <div class="download-options">
                 <div class="download-group">
                     <h3>Execution Results</h3>

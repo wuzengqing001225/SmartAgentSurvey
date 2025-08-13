@@ -20,6 +20,7 @@
                 {% for item in history %}
                 <div class="history-item {% if item.status == 'DAG_ERROR' %}dag-error{% endif %}"
                     data-filename="{{ item.filename }}" data-status="{{ item.status }}">
+                    <button class="delete-btn" onclick="deleteFile('{{ item.filename }}', event)">&times;</button>
                     <div class="filename">{{ item.filename }}</div>
                     <div class="upload-time">{{ item.upload_time }}</div>
                     <div class="file-info">
@@ -124,26 +125,26 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div id="resultsView" class="view">
-            <div class="results-container">
-                <div class="sample-count-banner">
-                    <div class="count-label">Total Samples</div>
-                    <div id="sampleCount" class="count-number">0</div>
-                </div>
+            <div id="resultsView" class="view">
+                <div class="results-container">
+                    <div class="sample-count-banner">
+                        <div class="count-label">Total Samples</div>
+                        <div id="sampleCount" class="count-number">0</div>
+                    </div>
 
-                <div class="action-buttons">
-                    <button class="btn secondary" onclick="goBackToDimensions()">
-                        Previous Step
-                    </button>
-                    <button class="btn primary" onclick="proceedToExecution()">
-                        Proceed to Execution
-                    </button>
-                </div>
+                    <div class="action-buttons">
+                        <button class="btn secondary" onclick="goBackToDimensions()">
+                            Previous Step
+                        </button>
+                        <button class="btn primary" onclick="proceedToExecution()">
+                            Proceed to Execution
+                        </button>
+                    </div>
 
-                <div class="profiles-grid" id="profilesGrid">
-                    <!-- Profiles will be inserted here -->
+                    <div class="profiles-grid" id="profilesGrid">
+                        <!-- Profiles will be inserted here -->
+                    </div>
                 </div>
             </div>
         </div>

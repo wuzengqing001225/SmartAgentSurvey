@@ -1,4 +1,8 @@
-# Smart Agent Survey: LLM Automated Survey Response Framework 
+# Smart Agent Survey: LLM Automated Survey Response Framework
+
+[![Python Version](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://python.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Framework: Flask](https://img.shields.io/badge/Framework-Flask-green.svg)](https://flask.palletsprojects.com/)
 
 **Smart Agent Survey** is an application that automates survey response generation by processing survey documents and creating multiple synthetic respondents using LLM agents. Users can input their survey file and either upload sample profiles or generate diverse respondent profiles automatically, after which the system produces comprehensive survey responses from each synthetic respondent based on their unique profiles and characteristics.
 
@@ -14,14 +18,14 @@
 
 ## Demo
 
-https://github.com/user-attachments/assets/e1810e31-2143-44e8-bb03-6f35b2536685
+<https://github.com/user-attachments/assets/e1810e31-2143-44e8-bb03-6f35b2536685>
 
 Demo questionnaire source: [TCU Test from Institute of Behavioral Research, Texas Christian University](https://ibr.tcu.edu/forms/)
 
 ## Setup
 
 - Install dependencies: `pip install -r requirements.txt`
-- Run `app.py` and open url http://127.0.0.1:5000
+- Run `app.py` and open url <http://127.0.0.1:5000>
 - File Structure
 
 ```bash
