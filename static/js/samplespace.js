@@ -427,9 +427,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="execution-button">
                         <button class="btn secondary" onclick="goBackToMethodSelection()">Previous Step</button>
                     </div>
-                    <div class="execution-button">
-                        <button class="btn primary" onclick="downloadSampleSpace()">Download Profiles</button>
-                    </div>
                     <div class="sample-size-control">
                         <label for="executionCountInput">Number of Executions:</label>
                         <input type="number" id="executionCountInput" min="1" value="1" class="number-input">
@@ -443,7 +440,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const profilesContainer = document.getElementById('profilesContainerUpload');
             profilesContainer.innerHTML = data.samples.map((sample, index) => `
                 <div class="profile-card-upload">
-                    <p><strong>Profile ${index + 1}:</strong> ${sample}</p>
+                    <div class="profile-header">Profile ${index + 1}</div>
+                    <div class="profile-content-upload">${sample}</div>
                 </div>
             `).join('');
         } else {
@@ -525,7 +523,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     window.downloadSampleSpace = function () {
-        collectAndSendEditedProfiles();
+        // Only collect and send edited profiles for generated samples, not uploaded ones
+        if (lastEntryMethod !== 'upload') {
+            collectAndSendEditedProfiles();
+        }
         window.location.href = `/api/execution/download/samplespace`;
     }
 

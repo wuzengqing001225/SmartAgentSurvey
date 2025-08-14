@@ -680,6 +680,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     addClickHandlers();
+
+    // On page load, check if there's a file selected from another page.
+    const activeFile = localStorage.getItem('currentFile');
+    if (activeFile) {
+        const historyItem = document.querySelector(`.history-item[data-filename="${activeFile}"]`);
+        if (historyItem) {
+            selectFile(activeFile);
+        }
+    }
 });
 
 function deleteFile(filename, event) {

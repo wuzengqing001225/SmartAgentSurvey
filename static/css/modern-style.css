@@ -2382,6 +2382,60 @@ Enhanced Toast System */
   background: var(--primary-hover);
 }
 
+/* Uploaded Profile Display Layout Override */
+#profilesContainerUpload {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; /* Spacing between cards */
+}
+
+/* 🎯 Profile Cards for Uploaded Samples */
+.profile-card-upload {
+  background: var(--background-secondary);
+  border-radius: var(--border-radius-lg);
+  padding: 2rem;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+  transition: var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.profile-card-upload::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--primary-gradient);
+}
+
+.profile-card-upload:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+}
+
+.profile-card-upload .profile-header {
+  font-size: 1.125rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.profile-card-upload .profile-content-upload {
+  background: var(--background-primary);
+  padding: 1.5rem;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  font-family: var(--font-family);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 /* 🎨 Enhanced Results Header */
 .results-header {
   text-align: center;

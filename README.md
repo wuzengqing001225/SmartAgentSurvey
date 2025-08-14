@@ -1,9 +1,5 @@
 # Smart Agent Survey: LLM Automated Survey Response Framework
 
-[![Python Version](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://python.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Framework: Flask](https://img.shields.io/badge/Framework-Flask-green.svg)](https://flask.palletsprojects.com/)
-
 **Smart Agent Survey** is an application that automates survey response generation by processing survey documents and creating multiple synthetic respondents using LLM agents. Users can input their survey file and either upload sample profiles or generate diverse respondent profiles automatically, after which the system produces comprehensive survey responses from each synthetic respondent based on their unique profiles and characteristics.
 
 ## Functions
@@ -18,25 +14,35 @@
 
 ## Demo
 
-<https://github.com/user-attachments/assets/e1810e31-2143-44e8-bb03-6f35b2536685>
+[https://github.com/user-attachments/assets/e1810e31-2143-44e8-bb03-6f35b2536685](https://github.com/user-attachments/assets/e1810e31-2143-44e8-bb03-6f35b2536685)
 
 Demo questionnaire source: [TCU Test from Institute of Behavioral Research, Texas Christian University](https://ibr.tcu.edu/forms/)
 
 ## Setup
 
 - Install dependencies: `pip install -r requirements.txt`
-- Run `app.py` and open url <http://127.0.0.1:5000>
-- File Structure
+- Run `app.py` and open url [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
-```bash
-├── Config/
-│   ├── config.json        # Configuration file
-├── Data/
-│   ├── Output/            # Execution results
-│   └── UserUpload/        # Survey files
-├── Module/
-│   ├── PreprocessingModule/
-│   ├── SampleGenerationModule/
-│   └── ExecutionModule/
-└── app.py
+## Project Structure
+
+The project is organized into a modular structure to separate concerns, making it easier to maintain and extend.
+
+```
+SmartAgentSurvey/
+├── Config/                      # Stores all configuration files.
+├── Data/                        # Handles all user data and generated outputs.
+│   ├── Output/                  # Contains the final survey results (JSON, CSV).
+│   └── UserUpload/              # Stores user-uploaded survey files.
+├── Module/                      # Contains the core business logic of the application.
+│   ├── PreprocessingModule/     # Handles survey ingestion, parsing, and validation.
+│   ├── SampleGenerationModule/  # Manages the creation of synthetic respondent profiles.
+│   └── ExecutionModule/         # Orchestrates the survey-taking process by LLM agents.
+├── static/                      # Holds all static frontend assets.
+│   ├── css/                     # Contains stylesheets for the web interface.
+│   ├── js/                      # Contains JavaScript files for frontend interactivity.
+│   └── images/                  # Stores images used in the UI.
+├── templates/                   # Contains HTML templates for the Flask web application.
+├── UtilityFunctions/            # Provides shared helper functions, like the LLM client.
+├── app.py                       # The main entry point for the Flask application.
+└── requirements.txt             # Lists the Python dependencies for the project.
 ```

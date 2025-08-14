@@ -345,6 +345,28 @@ class ModernInteractions {
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     new ModernInteractions();
+
+    // Allow switching to other files from the history list.
+    const historyList = document.querySelector('.history-list');
+    if (historyList) {
+        historyList.addEventListener('click', function(event) {
+            const clickedItem = event.target.closest('.history-item');
+
+            // Ignore clicks on delete button or outside of an item
+            if (!clickedItem || event.target.closest('.delete-btn')) {
+                return;
+            }
+
+            // If a non-active item is clicked, treat it as a navigation action.
+            if (clickedItem.classList.contains('processing')) {
+                const filename = clickedItem.dataset.filename;
+                if (filename) {
+                    localStorage.setItem('currentFile', filename);
+                    window.location.href = '/';
+                }
+            }
+        });
+    }
 });
 
 // Export for use in other scripts
