@@ -88,12 +88,18 @@ class LLMClient:
                 return cleaned_response
 
             elif self.provider == "openai":
-                response = self.client.chat.completions.create(
-                    model=self.model,
-                    messages=messages,
-                    max_tokens=self.max_tokens,
-                    temperature=self.temperature
-                )
+                if "gpt-5" in self.model:
+                    response = self.client.chat.completions.create(
+                        model=self.model,
+                        messages=messages
+                    )
+                else:
+                    response = self.client.chat.completions.create(
+                        model=self.model,
+                        messages=messages,
+                        max_tokens=self.max_tokens,
+                        temperature=self.temperature
+                    )
                 response_text = response.choices[0].message.content
                 # Extract JSON from response if it contains extra text
                 cleaned_response = self._extract_json_from_response(response_text)
