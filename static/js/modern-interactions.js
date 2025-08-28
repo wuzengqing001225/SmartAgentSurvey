@@ -349,7 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Allow switching to other files from the history list.
     const historyList = document.querySelector('.history-list');
     if (historyList) {
-        historyList.addEventListener('click', function(event) {
+        historyList.addEventListener('click', function (event) {
             const clickedItem = event.target.closest('.history-item');
 
             // Ignore clicks on delete button or outside of an item
@@ -368,6 +368,66 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// Global deleteFile function for all pages
+window.deleteFile = function (filename, event) {
+    event.stopPropagation(); // Prevent the click from selecting the file
+
+    const modal = document.getElementById('confirmModal');
+    const modalTitle = document.getElementById('confirmModalTitle');
+    const modalText = document.getElementById('confirmModalText');
+    const confirmBtn = document.getElementById('confirmModalConfirm');
+    const cancelBtn = document.getElementById('confirmModalCancel');
+
+    modalTitle.textContent = `Delete ${filename}?`;
+    modalText.innerHTML = `Are you sure you want to permanently delete this file? <br>This action cannot be undone.`;
+
+    modal.classList.add('show');
+
+    const confirmHandler = () => {
+        fetch(`/delete/${filename}`, {
+            method: 'DELETE',
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const itemToRemove = document.querySelector(`.history-item[data-filename="${filename}"]`);
+                    if (itemToRemove) {
+                        itemToRemove.remove();
+                    }
+                    if (window.toast) {
+                        window.toast.success(`${filename} deleted successfully.`);
+                    }
+                } else {
+                    if (window.toast) {
+                        window.toast.error(`Error deleting file: ${data.error}`);
+                    } else {
+                        alert(`Error: ${data.error}`);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                if (window.toast) {
+                    window.toast.error('An error occurred while deleting the file.');
+                } else {
+                    alert('An error occurred.');
+                }
+            })
+            .finally(() => {
+                closeModal();
+            });
+    };
+
+    const closeModal = () => {
+        modal.classList.remove('show');
+        confirmBtn.removeEventListener('click', confirmHandler);
+        cancelBtn.removeEventListener('click', closeModal);
+    };
+
+    confirmBtn.addEventListener('click', confirmHandler);
+    cancelBtn.addEventListener('click', closeModal);
+};
 
 // Export for use in other scripts
 window.ModernInteractions = ModernInteractions;
