@@ -69,7 +69,12 @@ def questionnaire_iterator_segment(config_set, processed_data, question_segments
         if not upload:
             sample_profile = Module.SampleGenerationModule.flow.format_single_profile(sample_space[agent_id], sample_dimensions)
         else:
-            sample_profile = sample_space[agent_id]
+            # For upload mode, sample_space[agent_id] is [id, profile_string, count]
+            # We need the profile_string part (index 1)
+            if isinstance(sample_space[agent_id], list) and len(sample_space[agent_id]) > 1:
+                sample_profile = str(sample_space[agent_id][1])
+            else:
+                sample_profile = str(sample_space[agent_id])
 
         answer = {}
         current_question = 1
@@ -119,9 +124,11 @@ def questionnaire_iterator_segment(config_set, processed_data, question_segments
 
             try:
                 answer_dict = json.loads(answer_text)
+                logger.info(f"Agent {agent_id + 1} segment {current_question}: Successfully parsed JSON with {len(answer_dict)} answers")
             except json.JSONDecodeError as e:
-                logger.error(f"Invalid JSON format: {e}")
-                logger.error(f"Raw response: {answer_text}")
+                logger.error(f"Agent {agent_id + 1} segment {current_question}: Invalid JSON format: {e}")
+                logger.error(f"Agent {agent_id + 1} segment {current_question}: Raw response: {answer_text}")
+                logger.error(f"Agent {agent_id + 1} segment {current_question}: Sample profile: {sample_profile}")
                 errors[agent_id + 1].append(f"JSON parsing error at segment starting with question {current_question}: {str(e)}")
                 answer_dict = {}
 
@@ -164,7 +171,12 @@ def questionnaire_iterator(config_set, processed_data, execution_order, sample_s
         if not upload:
             sample_profile = Module.SampleGenerationModule.flow.format_single_profile(sample_space[agent_id], sample_dimensions)
         else:
-            sample_profile = sample_space[agent_id]
+            # For upload mode, sample_space[agent_id] is [id, profile_string, count]
+            # We need the profile_string part (index 1)
+            if isinstance(sample_space[agent_id], list) and len(sample_space[agent_id]) > 1:
+                sample_profile = str(sample_space[agent_id][1])
+            else:
+                sample_profile = str(sample_space[agent_id])
 
         errors[agent_id + 1] = []
 
@@ -193,9 +205,11 @@ def questionnaire_iterator(config_set, processed_data, execution_order, sample_s
 
         try:
             answer_dict = json.loads(answer_text)
+            logger.info(f"Agent {agent_id + 1}: Successfully parsed JSON with {len(answer_dict)} answers")
         except json.JSONDecodeError as e:
-            logger.error(f"Invalid JSON format: {e}")
-            logger.error(f"Raw response: {answer_text}")
+            logger.error(f"Agent {agent_id + 1}: Invalid JSON format: {e}")
+            logger.error(f"Agent {agent_id + 1}: Raw response: {answer_text}")
+            logger.error(f"Agent {agent_id + 1}: Sample profile: {sample_profile}")
             errors[agent_id + 1].append(f"JSON parsing error: {str(e)}")
             answer_dict = {}
 

@@ -110,8 +110,8 @@ document.addEventListener('DOMContentLoaded', function () {
             // Generate dimensions
             fetch('/sample/generate_dimensions', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({filename: currentFile})
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filename: currentFile })
             })
                 .then(response => response.json())
                 .then(data => {
@@ -239,6 +239,29 @@ document.addEventListener('DOMContentLoaded', function () {
         renderDimensionsGrid(currentDimensions);
     };
 
+    // Helper function to generate appropriate format string for scale dimensions
+    function generateScaleFormat(dimensionName) {
+        const name = dimensionName.toLowerCase();
+
+        if (name.includes('age')) {
+            return 'Your age is X years old.';
+        } else if (name.includes('year') || name.includes('time')) {
+            return `You have X years of ${dimensionName.toLowerCase()}.`;
+        } else if (name.includes('friend')) {
+            return 'You have X close friends.';
+        } else if (name.includes('income') || name.includes('salary')) {
+            return 'Your income is X.';
+        } else if (name.includes('size') || name.includes('member')) {
+            return `Your ${dimensionName.toLowerCase()} is X.`;
+        } else if (name.includes('number') || name.includes('count')) {
+            return `You have X ${dimensionName.toLowerCase().replace('number of ', '').replace('count of ', '')}.`;
+        } else if (name.includes('score') || name.includes('rating')) {
+            return `Your ${dimensionName.toLowerCase()} is X.`;
+        } else {
+            return `Your ${dimensionName.toLowerCase()} is X.`;
+        }
+    }
+
     // Save and Generate functions
     function collectDimensionData() {
         const dimensions = {};
@@ -253,7 +276,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         parseInt(inputs[1].value),
                         parseInt(inputs[2].value)
                     ],
-                    format: 'Your age is X years old.'
+                    format: generateScaleFormat(name)
                 };
             } else {
                 const options = [];
@@ -278,8 +301,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         fetch('/sample/save_dimensions', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({dimensions: updatedDimensions})
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dimensions: updatedDimensions })
         })
             .then(response => response.json())
             .then(data => {
@@ -298,7 +321,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         fetch('/sample/update_dimensions', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 dimensions: updatedDimensions,
                 sample_size: sampleSize
@@ -386,7 +409,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Add navigation function for going back to Sample Dimensions
-    window.goBackToDimensions = function() {
+    window.goBackToDimensions = function () {
         // Hide all views
         document.getElementById('resultsView').classList.remove('active');
         document.getElementById('resultsView').style.display = '';
@@ -545,7 +568,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Send the edited profiles to the Flask endpoint
         fetch('/save-profiles', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(editedProfiles)
         }).then(response => {
             if (!response.ok) {
@@ -620,8 +643,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         fetch('/sample/settings', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({executions: executionCount})
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ executions: executionCount })
         }).then(response => {
             if (response.ok) {
                 window.location.href = '/execute';
@@ -638,7 +661,7 @@ document.addEventListener('DOMContentLoaded', function () {
         proceedToExecution();
     }
 
-    window.goBackToMethodSelection = function() {
+    window.goBackToMethodSelection = function () {
         // Hide all views under main-content
         document.querySelectorAll('.main-content .view').forEach(view => {
             view.classList.remove('active');

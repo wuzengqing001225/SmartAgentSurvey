@@ -63,13 +63,13 @@ class LLMClient:
                 system_prompt: Optional[str] = None,
                 force_max_tokens: Optional[int] = None) -> str:
         try:
-            if force_max_tokens != None:
+            if force_max_tokens is not None:
                 self.max_tokens = force_max_tokens
 
             messages = [{"role": "user", "content": prompt}]
 
             if system_prompt:
-                messages.insert(0, {"role": "user", "content": system_prompt})
+                messages.insert(0, {"role": "user" if self.provider=="anthropic" else "system", "content": system_prompt})
 
             self.logger.info(f"Sending request to {self.provider} with {len(messages)} messages")
             self.logger.info(f"Message sent: {messages}")
@@ -121,6 +121,13 @@ class LLMClient:
         response_text = re.sub(r'```json\s*', '', response_text)
         response_text = re.sub(r'```\s*$', '', response_text)
 
+        # First, try to parse the response directly as JSON
+        try:
+            json.loads(response_text.strip())
+            return response_text.strip()
+        except json.JSONDecodeError:
+            pass
+
         # Try to find the most complete JSON object using balanced braces
         brace_count = 0
         start_idx = -1
@@ -144,41 +151,6 @@ class LLMClient:
                 return potential_json.strip()
             except json.JSONDecodeError:
                 pass
-
-        # Fallback: use regex to find JSON-like patterns
-        json_pattern = r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}'
-        json_matches = re.findall(json_pattern, response_text, re.DOTALL)
-
-        if json_matches:
-            # Try each match to find a valid JSON, starting with the largest
-            for match in sorted(json_matches, key=len, reverse=True):
-                try:
-                    json.loads(match)
-                    return match.strip()
-                except json.JSONDecodeError:
-                    continue
-
-        # Last resort: try to extract lines that look like JSON
-        lines = response_text.strip().split('\n')
-        json_lines = []
-        collecting = False
-
-        for line in lines:
-            line = line.strip()
-            if line.startswith('{'):
-                collecting = True
-                json_lines = [line]
-            elif collecting:
-                json_lines.append(line)
-                if line.endswith('}'):
-                    potential_json = '\n'.join(json_lines)
-                    try:
-                        json.loads(potential_json)
-                        return potential_json
-                    except json.JSONDecodeError:
-                        pass
-                    collecting = False
-                    json_lines = []
 
         # If all else fails, return original response and let the calling code handle the error
         self.logger.warning("Could not extract valid JSON from response, returning original text")

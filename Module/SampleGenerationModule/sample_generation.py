@@ -1,6 +1,48 @@
 from UtilityFunctions import json_processing
 import json
 
+def standardize_dimension_formats(sample_dimensions):
+    """
+    Standardize format strings for sample dimensions to ensure consistency.
+    """
+    for dimension_name, dimension_data in sample_dimensions.items():
+        name_lower = dimension_name.lower()
+
+        # For scale-based dimensions
+        if 'scale' in dimension_data:
+            if 'age' in name_lower:
+                dimension_data['format'] = 'Your age is X years old.'
+            elif 'year' in name_lower and 'residence' in name_lower:
+                dimension_data['format'] = 'You have lived at your current residence for X years.'
+            elif 'year' in name_lower:
+                dimension_data['format'] = f'You have X years of {dimension_name.lower()}.'
+            elif 'friend' in name_lower:
+                dimension_data['format'] = 'You have X close friends.'
+            elif 'income' in name_lower or 'salary' in name_lower:
+                dimension_data['format'] = f'Your {dimension_name.lower()} is X.'
+            elif 'size' in name_lower or 'member' in name_lower:
+                dimension_data['format'] = f'Your {dimension_name.lower()} has X people.' if 'household' in name_lower else f'Your {dimension_name.lower()} is X.'
+            elif 'number' in name_lower or 'count' in name_lower:
+                # Extract the main subject from "number of X" or "count of X"
+                subject = dimension_name.lower().replace('number of ', '').replace('count of ', '')
+                dimension_data['format'] = f'You have X {subject}.'
+            elif 'score' in name_lower or 'rating' in name_lower or 'satisfaction' in name_lower:
+                dimension_data['format'] = f'Your {dimension_name.lower()} is X.'
+            else:
+                # Generic format for other scale dimensions
+                dimension_data['format'] = f'Your {dimension_name.lower()} is X.'
+
+        # For option-based dimensions, ensure consistent format
+        elif 'options' in dimension_data:
+            # Only change format if it's missing or clearly wrong
+            if not dimension_data.get('format') or 'Your age is X years old' in dimension_data.get('format', ''):
+                if any(word in name_lower for word in ['status', 'level', 'type', 'category']):
+                    dimension_data['format'] = f'Your {dimension_name.lower()} is X.'
+                else:
+                    dimension_data['format'] = 'You are X.'
+
+    return sample_dimensions
+
 def sample_dimension_generation(config_set, processed_data):
 
 
@@ -44,6 +86,9 @@ Be careful with the JSON format. Do not wrap elements in an array.""",
     llm_client.model = config.get("llm_settings", {}).get("model", "gpt-4o-mini")
 
     sample_dimensions = json.loads(sample_dimensions)
+
+    # Standardize format strings for consistency
+    sample_dimensions = standardize_dimension_formats(sample_dimensions)
 
     output_manager.save_json(sample_dimensions, 'sample_dimensions.json')
     logger.info(f"Sample dimensions saved.")
