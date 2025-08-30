@@ -2048,11 +2048,11 @@ Enhanced Toast System */
 }
 
 .btn.danger {
-    background: #ef4444;
+  background: #ef4444;
 }
 
 .btn.danger:hover {
-    background: #dc2626;
+  background: #dc2626;
 }
 
 @keyframes toastProgress {
@@ -2386,7 +2386,8 @@ Enhanced Toast System */
 #profilesContainerUpload {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem; /* Spacing between cards */
+  gap: 1.5rem;
+  /* Spacing between cards */
 }
 
 /* 🎯 Profile Cards for Uploaded Samples */
@@ -2480,6 +2481,10 @@ Enhanced Toast System */
   background: var(--background-overlay);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+}
+
+.stop-modal[style*="display: block"] {
+  display: flex !important;
   justify-content: center;
   align-items: center;
 }
