@@ -80,11 +80,11 @@ Survey: {survey_text}
 
 Be careful with the JSON format. Do not wrap elements in an array.""",
         system_prompt="You are a survey analysis assistant. Strictly return JSON only, with no explanations or additional text. Do not place ```json at the beginning.",
-        force_max_tokens = 1024
+        force_max_tokens = 8192 if "gpt-5" in llm_client.model else 1024
     )
 
     llm_client.model = config.get("llm_settings", {}).get("model", "gpt-4o-mini")
-
+    logger.info(f"Sample Dimensions:{sample_dimensions}")
     sample_dimensions = json.loads(sample_dimensions)
 
     # Standardize format strings for consistency

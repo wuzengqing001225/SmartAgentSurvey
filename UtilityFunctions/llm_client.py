@@ -82,16 +82,16 @@ class LLMClient:
                     temperature=self.temperature
                 )
                 response_text = response.content[0].text
-                # Extract JSON from response if it contains extra text
+                self.logger.info(f"Response: {response_text}")
                 cleaned_response = self._extract_json_from_response(response_text)
-                self.logger.info(f"Response: {cleaned_response}")
                 return cleaned_response
 
             elif self.provider == "openai":
                 if "gpt-5" in self.model:
                     response = self.client.chat.completions.create(
                         model=self.model,
-                        messages=messages
+                        messages=messages,
+                        max_completion_tokens=self.max_tokens
                     )
                 else:
                     response = self.client.chat.completions.create(
@@ -101,9 +101,11 @@ class LLMClient:
                         temperature=self.temperature
                     )
                 response_text = response.choices[0].message.content
+
+                self.logger.info(f"Response: {response_text}")
                 # Extract JSON from response if it contains extra text
                 cleaned_response = self._extract_json_from_response(response_text)
-                self.logger.info(f"Response: {cleaned_response}")
+
                 return cleaned_response
 
         except Exception as e:
@@ -200,10 +202,9 @@ class LLMClient:
                 )
 
                 self.logger.info("Successfully generated multimodal response...")
-
+                self.logger.info(f"Response: {response.output_text}")
                 # Extract JSON from response if it contains extra text
                 cleaned_response = self._extract_json_from_response(response.output_text)
-                self.logger.info(f"Cleaned response: {cleaned_response}")
                 return cleaned_response
             else:
                  with open(file_path, "rb") as f:
@@ -238,10 +239,10 @@ class LLMClient:
                     messages=messages,)
                  self.logger.info("Successfully generated multimodal response...")
                  response_text = response.content[0].text
-
+                 self.logger.info(f"Response: {response_text}")
                  # Extract JSON from response if it contains extra text
                  cleaned_response = self._extract_json_from_response(response_text)
-                 self.logger.info(f"Cleaned response: {cleaned_response}")
+
                  return cleaned_response
 
         except Exception as e:
