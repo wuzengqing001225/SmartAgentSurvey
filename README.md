@@ -16,7 +16,7 @@
 
 [https://github.com/user-attachments/assets/e1810e31-2143-44e8-bb03-6f35b2536685](https://github.com/user-attachments/assets/e1810e31-2143-44e8-bb03-6f35b2536685)
 
-Demo questionnaire source: [TCU Test from Institute of Behavioral Research, Texas Christian University](https://ibr.tcu.edu/forms/)
+Demo questionnaire source: [Sample Survey Questions for Current Undergraduate Students, Teaching Support Centre, Western University](https://teaching.uwo.ca/pdf/curriculum/Sample-Survey-Questions-Template-for-Undergraduate-Students-.pdf)
 
 ## Setup
 
@@ -43,6 +43,7 @@ SmartAgentSurvey/
 │   └── images/                  # Stores images used in the UI.
 ├── templates/                   # Contains HTML templates for the Flask web application.
 ├── UtilityFunctions/            # Provides shared helper functions, like the LLM client.
+├── Questionnaire/               # Provides example questionnaires.
 ├── app.py                       # The main entry point for the Flask application.
 └── requirements.txt             # Lists the Python dependencies for the project.
 ```
