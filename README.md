@@ -49,3 +49,17 @@ SmartAgentSurvey/
 ├── app.py                       # The main entry point for the Flask application.
 └── requirements.txt             # Lists the Python dependencies for the project.
 ```
+
+---
+
+If you find our work useful, please give us credit by citing:
+
+```bibtex
+@software{smartagentsurvey2025,
+  author       = {Theodor Wuebker, Zichuan Xu, Xu Han, Zengqing Wu and Chuan Xiao},
+  title        = {Smart Agent Survey: LLM Automated Survey Response Framework},
+  year         = {2025},
+  url          = {https://github.com/wuzengqing001225/SmartAgentSurvey},
+}
+```
+
